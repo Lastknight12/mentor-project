@@ -8,6 +8,7 @@ import {
   CheckIcon,
   ClockIcon,
   HeartIcon,
+  LockIcon,
   PlayIcon,
   StarIcon,
   UserIcon,
@@ -249,6 +250,14 @@ export function MoviePage() {
     }
   }, [id])
 
+  function watchTrailer() {
+    if (!movie?.trailerKey) return
+    setTrailerPlaying(true)
+    document
+      .getElementById('trailer')
+      ?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+
   async function toggleFavorite() {
     if (!user) {
       navigate('/login', { state: { from: location.pathname } })
@@ -364,11 +373,40 @@ export function MoviePage() {
                   )}
                   {movie.isFavorite ? 'В обраному' : 'Додати в обране'}
                 </button>
-                {movie.trailerKey && (
-                  <a className="button button-ghost" href="#trailer">
+                <button
+                  type="button"
+                  className="button button-ghost"
+                  onClick={watchTrailer}
+                  disabled={!movie.trailerKey}
+                >
+                  <PlayIcon size={17} />
+                  Дивитися трейлер
+                </button>
+                {movie.watch?.link ? (
+                  <a
+                    className="button button-watch"
+                    href={movie.watch.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
                     <PlayIcon size={17} />
-                    Дивитися трейлер
+                    Дивитися фільм
+                    <span className="watch-where">
+                      {movie.watch.providers
+                        .slice(0, 2)
+                        .map((provider) => provider.name)
+                        .join(', ')}
+                    </span>
                   </a>
+                ) : (
+                  <Link
+                    className="button button-ghost button-locked"
+                    to={`/movie/${movie.id}/watch`}
+                  >
+                    <LockIcon size={17} />
+                    Дивитися фільм
+                    <span className="soon-badge">Незабаром</span>
+                  </Link>
                 )}
               </div>
               {favoriteError && <p className="form-error">{favoriteError}</p>}

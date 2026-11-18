@@ -11,7 +11,9 @@ function pageList(current, total) {
     [total - 3, total - 2, total - 1].forEach((page) => pages.add(page))
   }
 
-  const sorted = [...pages].filter((page) => page >= 1 && page <= total)
+  const sorted = [...pages]
+    .filter((page) => page >= 1 && page <= total)
+    .sort((a, b) => a - b)
   const result = []
   sorted.forEach((page, index) => {
     if (index > 0 && page - sorted[index - 1] > 1) result.push('ellipsis')
