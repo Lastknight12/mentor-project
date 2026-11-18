@@ -69,6 +69,39 @@ function resolveCredits(raw) {
   }
 }
 
+const WATCH_REGIONS = ['UA', 'PL', 'US']
+
+// Легальні сервіси, де фільм можна подивитися (дані TMDB / JustWatch).
+function resolveWatch(raw) {
+  const results = raw['watch/providers']?.results
+  if (!results) return null
+  const region = WATCH_REGIONS.find((code) => results[code])
+  if (!region) return null
+  const entry = results[region]
+  const kinds = [
+    ['flatrate', 'subscription'],
+    ['free', 'free'],
+    ['rent', 'rent'],
+    ['buy', 'buy'],
+  ]
+  const providers = []
+  const seen = new Set()
+  for (const [key, type] of kinds) {
+    for (const provider of entry[key] || []) {
+      if (seen.has(provider.provider_id)) continue
+      seen.add(provider.provider_id)
+      providers.push({
+        id: provider.provider_id,
+        name: provider.provider_name,
+        type,
+        logoUrl: imageUrl(provider.logo_path, 'w185'),
+      })
+    }
+  }
+  if (!providers.length) return null
+  return { region, link: entry.link || null, providers }
+}
+
 function normalizeMovie(raw, genreMap) {
   const title = raw.title || raw.name || 'Без назви'
   const releaseDate = raw.release_date || ''
@@ -95,6 +128,7 @@ function normalizeMovie(raw, genreMap) {
       imageUrl(raw.backdrop_path, 'w1280') ||
       placeholder('backdrop', raw.id, title),
     trailerKey: resolveTrailer(raw),
+    watch: resolveWatch(raw),
     director: credits.director,
     cast: credits.cast,
   }
@@ -149,7 +183,14 @@ export async function listGenres() {
   return result.genres
 }
 
-export async function browseMovies(options) {
+// Максимум сторінок каталогу, які показує сайт
+const MAX_PAGES = 15
+
+export async function browseMovies(inputOptions) {
+  const options = {
+    ...inputOptions,
+    page: Math.min(inputOptions.page || 1, MAX_PAGES),
+  }
   const { genres } = await loadGenres()
   const genreMap = makeGenreMap(genres)
   const query = String(options.query || '').trim()
@@ -181,7 +222,7 @@ export async function browseMovies(options) {
 
     return {
       page: payload.page || options.page || 1,
-      totalPages: Math.min(payload.total_pages || 1, 500),
+      totalPages: Math.min(payload.total_pages || 1, MAX_PAGES),
       totalResults: payload.total_results || 0,
       results,
       genres,

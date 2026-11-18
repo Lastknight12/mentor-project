@@ -103,7 +103,7 @@ export function searchMovies({ page, query }) {
 export function getMovieDetails(id) {
   return cachedRequest(
     `/movie/${id}`,
-    { append_to_response: 'videos,credits' },
+    { append_to_response: 'videos,credits,watch/providers' },
     15 * 60 * 1000,
   )
 }

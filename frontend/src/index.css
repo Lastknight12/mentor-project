@@ -2801,3 +2801,230 @@ textarea:focus-visible {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Заблокована кнопка «Дивитися фільм» */
+.button-locked,
+.button-locked:disabled {
+  opacity: 1;
+  cursor: pointer;
+  color: var(--text-muted, #9a9aa8);
+  border-style: dashed;
+  gap: 8px;
+}
+
+.soon-badge {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(255, 190, 90, 0.16);
+  color: #ffc46b;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* Кнопка play на постері при наведенні */
+.poster-play {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 54px;
+  height: 54px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  background: rgba(8, 8, 12, 0.6);
+  backdrop-filter: blur(10px);
+  color: var(--accent);
+  opacity: 0;
+  transform: translate(-50%, -40%) scale(0.85);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.movie-card:hover .poster-play,
+.movie-card-link:focus-visible .poster-play {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+/* Сторінка перегляду */
+.watch-page {
+  width: min(1100px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 32px 0 80px;
+}
+
+.watch-title {
+  margin: 18px 0 20px;
+  font-size: clamp(1.5rem, 3.4vw, 2.4rem);
+}
+
+.watch-title span {
+  color: var(--text-soft);
+  font-weight: 500;
+}
+
+.watch-player img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: blur(6px) brightness(0.45);
+  transform: scale(1.05);
+}
+
+.watch-lock {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 24px;
+  text-align: center;
+}
+
+.watch-lock h2 {
+  margin: 0;
+  font-size: clamp(1.1rem, 2.6vw, 1.7rem);
+}
+
+.watch-lock p {
+  max-width: 440px;
+  margin: 0 0 6px;
+  color: var(--text-soft);
+}
+
+.watch-overview {
+  max-width: 760px;
+  margin-top: 24px;
+  color: var(--text-soft);
+  line-height: 1.7;
+}
+
+/* Де дивитися */
+.providers {
+  margin-top: 36px;
+}
+
+.providers h2 {
+  margin: 0 0 16px;
+  font-size: 1.25rem;
+}
+
+.providers-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.provider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px 10px 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: 16px;
+  background: var(--surface);
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.provider:hover {
+  border-color: rgba(255, 182, 72, 0.45);
+  transform: translateY(-2px);
+}
+
+.provider img {
+  width: 44px;
+  height: 44px;
+  border-radius: 11px;
+  object-fit: cover;
+}
+
+.provider strong,
+.provider small {
+  display: block;
+}
+
+.provider small,
+.providers-empty,
+.providers-credit {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+/* Активна кнопка «Дивитися фільм» */
+.button-watch {
+  gap: 10px;
+  background: linear-gradient(135deg, #ff7a45, #ffb648);
+  border-color: transparent;
+  color: #1a1208;
+  box-shadow: 0 10px 30px rgba(255, 140, 60, 0.28);
+}
+
+.button-watch:hover {
+  filter: brightness(1.06);
+  transform: translateY(-1px);
+}
+
+.watch-where {
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: rgba(20, 12, 4, 0.16);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+/* Посилання «Дивитися» на картці фільму */
+.movie-poster-wrap {
+  position: relative;
+}
+
+.poster-watch {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 10px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 38px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #ff7a45, #ffb648);
+  color: #1a1208;
+  font-size: 0.8rem;
+  font-weight: 800;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.4);
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.25s ease, transform 0.25s ease, filter 0.2s ease;
+}
+
+.movie-card:hover .poster-watch,
+.poster-watch:focus-visible {
+  opacity: 1;
+  transform: translateY(-7px);
+}
+
+.poster-watch:hover {
+  filter: brightness(1.08);
+}
+
+/* На сенсорних екранах кнопка завжди видна */
+@media (hover: none) {
+  .poster-watch {
+    opacity: 1;
+    transform: none;
+    min-height: 34px;
+  }
+}
+
+/* Розблокований стан: фільм доступний на сервісах */
+.round-icon.is-unlocked {
+  background: rgba(115, 214, 164, 0.14);
+  color: var(--success);
+  box-shadow: 0 0 0 6px rgba(115, 214, 164, 0.07);
+}

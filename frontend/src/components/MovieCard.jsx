@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { HeartIcon, StarIcon } from './Icons.jsx'
+import { HeartIcon, PlayIcon, StarIcon } from './Icons.jsx'
 
 export function MovieCard({ movie, action, showFavorite = false }) {
   const genreLine = movie.genres
@@ -9,7 +9,12 @@ export function MovieCard({ movie, action, showFavorite = false }) {
 
   return (
     <article className="movie-card">
-      <Link to={`/movie/${movie.id}`} className="movie-card-link">
+      <div className="movie-poster-wrap">
+      <Link
+        to={`/movie/${movie.id}`}
+        className="movie-card-link"
+        aria-label={`Сторінка фільму «${movie.title}»`}
+      >
         <div className="movie-poster">
           <img
             src={movie.posterUrl}
@@ -17,6 +22,9 @@ export function MovieCard({ movie, action, showFavorite = false }) {
             loading="lazy"
           />
           <div className="poster-shade" />
+          <span className="poster-play" aria-hidden="true">
+            <PlayIcon size={22} />
+          </span>
           <span className="rating-chip">
             <StarIcon size={14} />
             {movie.rating ? movie.rating.toFixed(1) : '—'}
@@ -27,6 +35,17 @@ export function MovieCard({ movie, action, showFavorite = false }) {
             </span>
           )}
         </div>
+      </Link>
+      <Link
+        to={`/movie/${movie.id}/watch`}
+        className="poster-watch"
+        aria-label={`Дивитися фільм «${movie.title}»`}
+      >
+        <PlayIcon size={14} />
+        Дивитися
+      </Link>
+      </div>
+      <Link to={`/movie/${movie.id}`} className="movie-card-link" tabIndex={-1}>
         <div className="movie-card-info">
           <h3>{movie.title}</h3>
           <div className="movie-card-meta">
