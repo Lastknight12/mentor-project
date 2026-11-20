@@ -1,0 +1,12 @@
+{
+  "_readme": "Фільми, які можна дивитися прямо на сайті. Ключ — id фільму з TMDB. Додавайте ТІЛЬКИ відео, на які є права: власні, public domain або з дозволом правовласника. Поле sources — прямі посилання на .mp4/.webm/.mov.",
+  "10378": {
+    "license": "Big Buck Bunny © Blender Foundation | peach.blender.org — CC BY 3.0",
+    "sources": [
+      {
+        "label": "720p",
+        "url": "https://download.blender.org/peach/bigbuckbunny_movies/big_buck_bunny_720p_h264.mov"
+      }
+    ]
+  }
+}

@@ -249,3 +249,17 @@ export function getDemoMovie(id) {
     genres: getGenreNames(movie.genre_ids),
   }
 }
+
+export function randomDemoMovie({ genreId, exclude = [] } = {}) {
+  const normalizedGenre = Number(genreId) || null
+  const pool = demoMovies.filter(
+    (movie) =>
+      movie.vote_average >= 7 &&
+      (!normalizedGenre || movie.genre_ids.includes(normalizedGenre)),
+  )
+  const fresh = pool.filter((movie) => !exclude.includes(movie.id))
+  const list = fresh.length ? fresh : pool
+  if (!list.length) return null
+  const movie = list[Math.floor(Math.random() * list.length)]
+  return { ...movie, genres: getGenreNames(movie.genre_ids) }
+}

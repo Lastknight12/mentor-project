@@ -148,3 +148,16 @@ export function UnlockIcon({ size = 18 }) {
     </svg>
   )
 }
+
+export function DiceIcon({ size = 18 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <rect x="4" y="4" width="16" height="16" rx="3.5" stroke="currentColor" strokeWidth="1.8" />
+      <circle cx="9" cy="9" r="1.3" fill="currentColor" />
+      <circle cx="15" cy="9" r="1.3" fill="currentColor" />
+      <circle cx="12" cy="12" r="1.3" fill="currentColor" />
+      <circle cx="9" cy="15" r="1.3" fill="currentColor" />
+      <circle cx="15" cy="15" r="1.3" fill="currentColor" />
+    </svg>
+  )
+}

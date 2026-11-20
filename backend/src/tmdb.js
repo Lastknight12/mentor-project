@@ -92,6 +92,19 @@ export function discoverMovies({ page, genreId, year, minRating, sort }) {
   })
 }
 
+// Добірка найкращих фільмів для кнопки «Що подивитися?»
+export function discoverTopMovies({ page, genreId }) {
+  return cachedRequest('/discover/movie', {
+    page,
+    sort_by: 'popularity.desc',
+    with_genres: genreId || undefined,
+    'vote_average.gte': 7,
+    'vote_count.gte': 500,
+    include_adult: false,
+    include_video: false,
+  })
+}
+
 export function searchMovies({ page, query }) {
   return cachedRequest('/search/movie', {
     page,

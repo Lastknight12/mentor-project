@@ -382,7 +382,16 @@ export function MoviePage() {
                   <PlayIcon size={17} />
                   Дивитися трейлер
                 </button>
-                {movie.watch?.link ? (
+                {movie.video ? (
+                  <Link
+                    className="button button-watch"
+                    to={`/movie/${movie.id}/watch`}
+                  >
+                    <PlayIcon size={17} />
+                    Дивитися фільм
+                    <span className="watch-where">Онлайн</span>
+                  </Link>
+                ) : movie.watch?.link ? (
                   <a
                     className="button button-watch"
                     href={movie.watch.link}

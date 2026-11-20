@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import { optionalAuth, requireAuth } from '../auth.js'
-import { browseMovies, listGenres, movieDetails } from '../catalogue.js'
+import { browseMovies, listGenres, movieDetails, randomMovie } from '../catalogue.js'
+import { getVideo } from '../videos.js'
 import {
   getReviewSummary,
   isFavorite,
@@ -34,6 +35,20 @@ export const moviesRouter = Router()
 moviesRouter.get('/genres', async (req, res) => {
   const genres = await listGenres()
   res.json({ genres })
+})
+
+moviesRouter.get('/random', async (req, res) => {
+  const genreId = req.query.genre ? Number(req.query.genre) : null
+  const exclude = String(req.query.exclude || '')
+    .split(',')
+    .map(Number)
+    .filter((id) => Number.isInteger(id) && id > 0)
+    .slice(0, 100)
+  const movie = await randomMovie({ genreId, exclude })
+  if (!movie) {
+    return res.status(404).json({ error: 'Не знайшли фільм за цим жанром' })
+  }
+  res.json(movie)
 })
 
 moviesRouter.get('/search', async (req, res) => {
@@ -107,6 +122,7 @@ moviesRouter.get('/:id', optionalAuth, async (req, res) => {
   res.json({
     ...result.movie,
     source: result.source,
+    video: await getVideo(id),
     reviews,
     reviewSummary: getReviewSummary(id),
     isFavorite: req.user ? isFavorite(req.user.id, id) : false,

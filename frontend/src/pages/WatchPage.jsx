@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import { api } from '../api.js'
 import { ArrowLeftIcon, LockIcon, PlayIcon, UnlockIcon } from '../components/Icons.jsx'
 import { PageLoader } from '../components/Loaders.jsx'
+import { VideoPlayer } from '../components/VideoPlayer.jsx'
 
 const TYPE_LABELS = {
   subscription: 'За підпискою',
@@ -53,12 +54,14 @@ export function WatchPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [trailerPlaying, setTrailerPlaying] = useState(false)
+  const [tab, setTab] = useState('film')
 
   useEffect(() => {
     let active = true
     setLoading(true)
     setError('')
     setTrailerPlaying(false)
+    setTab('film')
     api
       .movie(id)
       .then((data) => active && setMovie(data))
@@ -72,6 +75,8 @@ export function WatchPage() {
   if (loading) return <PageLoader />
 
   const hasProviders = Boolean(movie?.watch?.providers?.length)
+  const hasVideo = Boolean(movie?.video?.sources?.length)
+  const showPlayer = hasVideo && tab === 'film'
 
   if (error || !movie) {
     return (
@@ -97,8 +102,42 @@ export function WatchPage() {
         {movie.title} {movie.year && <span>({movie.year})</span>}
       </h1>
 
+      {hasVideo && (
+        <div className="watch-tabs" role="tablist">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={tab === 'film'}
+            className={tab === 'film' ? 'is-active' : ''}
+            onClick={() => setTab('film')}
+          >
+            <PlayIcon size={15} />
+            Дивитися онлайн
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={tab === 'trailer'}
+            className={tab === 'trailer' ? 'is-active' : ''}
+            onClick={() => {
+              setTab('trailer')
+              setTrailerPlaying(Boolean(movie.trailerKey))
+            }}
+          >
+            Трейлер
+          </button>
+        </div>
+      )}
+
       <div className="trailer-frame watch-player">
-        {trailerPlaying && movie.trailerKey ? (
+        {showPlayer ? (
+          <VideoPlayer
+            key={movie.id}
+            sources={movie.video.sources}
+            poster={movie.backdropUrl}
+            title={movie.title}
+          />
+        ) : trailerPlaying && movie.trailerKey ? (
           <iframe
             src={`https://www.youtube-nocookie.com/embed/${movie.trailerKey}?autoplay=1&rel=0`}
             title={`Трейлер фільму «${movie.title}»`}
@@ -145,6 +184,10 @@ export function WatchPage() {
           </>
         )}
       </div>
+
+      {showPlayer && movie.video.license && (
+        <p className="watch-license">{movie.video.license}</p>
+      )}
 
       <WatchProviders watch={movie.watch} />
 

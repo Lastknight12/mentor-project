@@ -3,9 +3,11 @@ import {
   demoGenres,
   getDemoMovie,
   queryDemoMovies,
+  randomDemoMovie,
 } from './demo.js'
 import {
   discoverMovies,
+  discoverTopMovies,
   getGenres as getTmdbGenres,
   getMovieDetails as getTmdbMovieDetails,
   searchMovies,
@@ -257,4 +259,32 @@ export async function moviesByIds(ids) {
   return settled
     .filter((item) => item.status === 'fulfilled' && item.value.movie)
     .map((item) => item.value.movie)
+}
+
+// Випадковий фільм з високим рейтингом для кнопки «Що подивитися?»
+export async function randomMovie({ genreId, exclude = [] } = {}) {
+  const { genres } = await loadGenres()
+  const genreMap = makeGenreMap(genres)
+
+  if (hasTmdbCredentials) {
+    try {
+      const page = 1 + Math.floor(Math.random() * 10)
+      let payload = await discoverTopMovies({ page, genreId })
+      if (!payload.results?.length && page > 1) {
+        payload = await discoverTopMovies({ page: 1, genreId })
+      }
+      const all = (payload.results || []).filter((movie) => movie.poster_path)
+      const fresh = all.filter((movie) => !exclude.includes(movie.id))
+      const list = fresh.length ? fresh : all
+      if (list.length) {
+        const raw = list[Math.floor(Math.random() * list.length)]
+        return normalizeMovie(raw, genreMap)
+      }
+    } catch {
+      // нижче — демо-каталог
+    }
+  }
+
+  const demo = randomDemoMovie({ genreId, exclude })
+  return demo ? normalizeMovie(demo, genreMap) : null
 }

@@ -1,13 +1,15 @@
 import { useEffect, useState } from 'react'
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth.jsx'
-import { LogoutIcon, SearchIcon, StarIcon } from './Icons.jsx'
+import { DiceIcon, LogoutIcon, SearchIcon, StarIcon } from './Icons.jsx'
+import { RandomPicker } from './RandomPicker.jsx'
 
 export function Header() {
   const { user, logout } = useAuth()
   const location = useLocation()
   const navigate = useNavigate()
   const [term, setTerm] = useState('')
+  const [pickerOpen, setPickerOpen] = useState(false)
 
   useEffect(() => {
     if (location.pathname === '/') {
@@ -57,6 +59,14 @@ export function Header() {
         </form>
 
         <div className="header-actions">
+          <button
+            type="button"
+            className="random-btn"
+            onClick={() => setPickerOpen(true)}
+          >
+            <DiceIcon size={17} />
+            <span>Що подивитися?</span>
+          </button>
           {user ? (
             <>
               <Link className="user-chip" to="/favorites">
@@ -97,11 +107,20 @@ export function Header() {
             aria-label="Пошук фільму"
           />
         </form>
+        <button
+          type="button"
+          className="mobile-rating-link mobile-random"
+          onClick={() => setPickerOpen(true)}
+        >
+          <DiceIcon size={15} />
+          Що глянути?
+        </button>
         <Link className="mobile-rating-link" to="/?sort=rating_desc">
           <StarIcon size={15} />
           Топ
         </Link>
       </div>
+      {pickerOpen && <RandomPicker onClose={() => setPickerOpen(false)} />}
     </header>
   )
 }

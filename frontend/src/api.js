@@ -52,6 +52,7 @@ export const api = {
   genres: () => request('/movies/genres'),
   movies: (params) => request('/movies', { params }),
   search: (params) => request('/movies/search', { params }),
+  randomMovie: (params) => request('/movies/random', { params }),
   movie: (id) => request(`/movies/${id}`),
   reviews: (id) => request(`/movies/${id}/reviews`),
   addReview: (id, body) =>
