@@ -1,7 +1,13 @@
 import { useState } from 'react'
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth.jsx'
-import { ArrowUpRightIcon, FilmIcon, StarIcon } from '../components/Icons.jsx'
+import {
+  ArrowUpRightIcon,
+  EyeIcon,
+  EyeOffIcon,
+  FilmIcon,
+  StarIcon,
+} from '../components/Icons.jsx'
 import { PageLoader } from '../components/Loaders.jsx'
 
 export function AuthPage({ mode }) {
@@ -10,6 +16,7 @@ export function AuthPage({ mode }) {
   const location = useLocation()
   const [form, setForm] = useState({ name: '', email: '', password: '' })
   const [error, setError] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [submitting, setSubmitting] = useState(false)
 
   const isRegister = mode === 'register'
@@ -135,16 +142,28 @@ export function AuthPage({ mode }) {
             </label>
             <label>
               <span>Пароль</span>
-              <input
-                type="password"
-                name="password"
-                value={form.password}
-                onChange={updateField}
-                placeholder="Щонайменше 6 символів"
-                autoComplete={isRegister ? 'new-password' : 'current-password'}
-                minLength="6"
-                required
-              />
+              <div className="password-wrap">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  name="password"
+                  value={form.password}
+                  onChange={updateField}
+                  placeholder="Щонайменше 6 символів"
+                  autoComplete={isRegister ? 'new-password' : 'current-password'}
+                  minLength="6"
+                  required
+                />
+                <button
+                  type="button"
+                  className="password-toggle"
+                  onClick={() => setShowPassword((value) => !value)}
+                  aria-label={showPassword ? 'Сховати пароль' : 'Показати пароль'}
+                  aria-pressed={showPassword}
+                  title={showPassword ? 'Сховати пароль' : 'Показати пароль'}
+                >
+                  {showPassword ? <EyeOffIcon /> : <EyeIcon />}
+                </button>
+              </div>
             </label>
 
             {error && <p className="form-error">{error}</p>}
