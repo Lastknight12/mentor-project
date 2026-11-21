@@ -6,6 +6,7 @@ import { FavoritesPage } from './pages/FavoritesPage.jsx'
 import { HomePage } from './pages/HomePage.jsx'
 import { MoviePage } from './pages/MoviePage.jsx'
 import { WatchPage } from './pages/WatchPage.jsx'
+import { QuizPage } from './pages/QuizPage.jsx'
 import { NotFoundPage } from './pages/NotFoundPage.jsx'
 
 function App() {
@@ -17,6 +18,7 @@ function App() {
             <Route index element={<HomePage />} />
             <Route path="movie/:id" element={<MoviePage />} />
             <Route path="movie/:id/watch" element={<WatchPage />} />
+            <Route path="quiz" element={<QuizPage />} />
             <Route path="favorites" element={<FavoritesPage />} />
             <Route path="login" element={<AuthPage mode="login" />} />
             <Route path="register" element={<AuthPage mode="register" />} />

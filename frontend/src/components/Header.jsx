@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth.jsx'
-import { DiceIcon, LogoutIcon, SearchIcon, StarIcon } from './Icons.jsx'
+import { DiceIcon, HelpIcon, LogoutIcon, SearchIcon, StarIcon } from './Icons.jsx'
+import { TOUR_EVENT } from './GuideTour.jsx'
 import { RandomPicker } from './RandomPicker.jsx'
 
 export function Header() {
@@ -41,6 +42,7 @@ export function Header() {
           <NavLink to="/" end>
             Каталог
           </NavLink>
+          <NavLink to="/quiz">Вікторина</NavLink>
           <NavLink to="/favorites">Обране</NavLink>
         </nav>
 
@@ -66,6 +68,15 @@ export function Header() {
           >
             <DiceIcon size={17} />
             <span>Що подивитися?</span>
+          </button>
+          <button
+            type="button"
+            className="help-btn"
+            onClick={() => window.dispatchEvent(new Event(TOUR_EVENT))}
+            aria-label="Як користуватися сайтом"
+            title="Як користуватися"
+          >
+            <HelpIcon size={20} />
           </button>
           {user ? (
             <>

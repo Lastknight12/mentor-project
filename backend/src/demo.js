@@ -263,3 +263,10 @@ export function randomDemoMovie({ genreId, exclude = [] } = {}) {
   const movie = list[Math.floor(Math.random() * list.length)]
   return { ...movie, genres: getGenreNames(movie.genre_ids) }
 }
+
+export function allDemoMovies() {
+  return demoMovies.map((movie) => ({
+    ...movie,
+    genres: getGenreNames(movie.genre_ids),
+  }))
+}

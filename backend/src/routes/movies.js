@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import { optionalAuth, requireAuth } from '../auth.js'
-import { browseMovies, listGenres, movieDetails, randomMovie } from '../catalogue.js'
+import { browseMovies, listGenres, movieDetails, quizQuestions, randomMovie } from '../catalogue.js'
 import { getVideo } from '../videos.js'
 import {
   getReviewSummary,
@@ -35,6 +35,15 @@ export const moviesRouter = Router()
 moviesRouter.get('/genres', async (req, res) => {
   const genres = await listGenres()
   res.json({ genres })
+})
+
+moviesRouter.get('/quiz', async (req, res) => {
+  const count = Math.min(Math.max(Number(req.query.count) || 10, 3), 15)
+  const questions = await quizQuestions(count)
+  if (!questions.length) {
+    return res.status(503).json({ error: 'Не вдалося підготувати вікторину' })
+  }
+  res.json({ questions })
 })
 
 moviesRouter.get('/random', async (req, res) => {

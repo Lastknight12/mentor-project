@@ -1,6 +1,7 @@
 import { hasTmdbCredentials } from './config.js'
 import {
   demoGenres,
+  allDemoMovies,
   getDemoMovie,
   queryDemoMovies,
   randomDemoMovie,
@@ -287,4 +288,93 @@ export async function randomMovie({ genreId, exclude = [] } = {}) {
 
   const demo = randomDemoMovie({ genreId, exclude })
   return demo ? normalizeMovie(demo, genreMap) : null
+}
+
+// ---------- Вікторина ----------
+function shuffle(list) {
+  const copy = [...list]
+  for (let index = copy.length - 1; index > 0; index -= 1) {
+    const swap = Math.floor(Math.random() * (index + 1))
+    ;[copy[index], copy[swap]] = [copy[swap], copy[index]]
+  }
+  return copy
+}
+
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+// Ховаємо назву фільму в описі, щоб не підказувати відповідь
+function hideTitle(text, titles) {
+  let result = text
+  for (const title of titles.filter((item) => item && item.length > 2)) {
+    result = result.replace(new RegExp(escapeRegExp(title), 'gi'), '«…»')
+  }
+  return result
+}
+
+async function loadQuizPool() {
+  if (hasTmdbCredentials) {
+    try {
+      const pages = shuffle(Array.from({ length: 10 }, (_, i) => i + 1)).slice(0, 3)
+      const payloads = await Promise.all(
+        pages.map((page) => discoverTopMovies({ page })),
+      )
+      const seen = new Set()
+      const pool = []
+      for (const payload of payloads) {
+        for (const raw of payload.results || []) {
+          if (seen.has(raw.id) || !raw.poster_path) continue
+          seen.add(raw.id)
+          pool.push({ ...raw, _tmdb: true })
+        }
+      }
+      if (pool.length >= 12) return pool
+    } catch {
+      // нижче — демо-каталог
+    }
+  }
+  return allDemoMovies()
+}
+
+export async function quizQuestions(count = 10) {
+  const pool = await loadQuizPool()
+  const selected = shuffle(pool).slice(0, count)
+  const total = selected.length
+
+  return selected.map((raw, index) => {
+    const title = raw.title || raw.name || 'Без назви'
+    const hasFrame = Boolean(raw._tmdb && raw.backdrop_path)
+    const hasPlot = (raw.overview || '').length >= 50
+    // Чергуємо типи запитань: кадр / опис
+    const wantFrame = index % 2 === 0
+    const type = hasFrame && (wantFrame || !hasPlot) ? 'frame' : 'plot'
+
+    const others = shuffle(pool.filter((item) => item.id !== raw.id)).slice(0, 3)
+    const options = shuffle([raw, ...others]).map((item) => ({
+      id: item.id,
+      title: item.title || item.name || 'Без назви',
+    }))
+
+    const year = raw.release_date ? Number(raw.release_date.slice(0, 4)) : null
+    return {
+      number: index + 1,
+      total,
+      type,
+      image: type === 'frame' ? imageUrl(raw.backdrop_path, 'w780') : null,
+      text:
+        type === 'plot'
+          ? hideTitle(raw.overview || 'Опис відсутній.', [title, raw.original_title])
+          : null,
+      options,
+      answerId: raw.id,
+      movie: {
+        id: raw.id,
+        title,
+        year,
+        posterUrl:
+          imageUrl(raw.poster_path, 'w342') || placeholder('poster', raw.id, title),
+      },
+    }
+  })
 }
