@@ -22,7 +22,15 @@ export async function getVideo(movieId) {
       }))
     if (!sources.length) return null
 
-    return { sources, license: String(item.license || '') }
+    const subtitles = (Array.isArray(item.subtitles) ? item.subtitles : [])
+      .filter((track) => track && /^(https?:\/\/|\/)/i.test(track.url || ''))
+      .map((track) => ({
+        label: String(track.label || 'Українська'),
+        lang: String(track.lang || 'uk'),
+        url: track.url,
+      }))
+
+    return { sources, subtitles, license: String(item.license || '') }
   } catch {
     return null
   }

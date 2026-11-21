@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { setA11y, useA11y } from '../a11y.js'
 
 const RATES = [0.5, 0.75, 1, 1.25, 1.5, 2]
 
@@ -61,6 +62,13 @@ const SettingsGlyph = () => (
   </Icon>
 )
 
+const CaptionsGlyph = () => (
+  <Icon>
+    <rect x="3" y="5" width="18" height="14" rx="3" />
+    <path d="M7 11h4M13 11h4M7 15h2.5M12 15h5" />
+  </Icon>
+)
+
 const FullscreenGlyph = ({ active }) => (
   <Icon>
     {active ? (
@@ -75,7 +83,8 @@ const FullscreenGlyph = ({ active }) => (
  * Кінопрогравач: великий play, перемотка, гучність, швидкість, якість,
  * повний екран і гарячі клавіші (Пробіл/K, ←/→, ↑/↓, M, F).
  */
-export function VideoPlayer({ sources, poster, title }) {
+export function VideoPlayer({ sources, subtitles = [], poster, title }) {
+  const { captions } = useA11y()
   const containerRef = useRef(null)
   const videoRef = useRef(null)
   const hideTimer = useRef(null)
@@ -108,6 +117,20 @@ export function VideoPlayer({ sources, poster, title }) {
       clearTimeout(hideTimer.current)
     }
   }, [])
+
+  // Субтитри: вмикаються кнопкою CC або панеллю доступності
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video) return undefined
+    function apply() {
+      Array.from(video.textTracks).forEach((track) => {
+        track.mode = captions ? 'showing' : 'hidden'
+      })
+    }
+    apply()
+    video.addEventListener('loadedmetadata', apply)
+    return () => video.removeEventListener('loadedmetadata', apply)
+  }, [captions, sourceIndex, subtitles])
 
   function showControls() {
     setControlsVisible(true)
@@ -267,6 +290,7 @@ export function VideoPlayer({ sources, poster, title }) {
         poster={poster || undefined}
         preload="metadata"
         playsInline
+        crossOrigin={subtitles.length ? 'anonymous' : undefined}
         onClick={togglePlay}
         onDoubleClick={toggleFullscreen}
         onPlay={() => {
@@ -292,7 +316,17 @@ export function VideoPlayer({ sources, poster, title }) {
         onError={() =>
           setError('Не вдалося завантажити відео. Спробуйте інше джерело або оновіть сторінку.')
         }
-      />
+      >
+        {subtitles.map((track) => (
+          <track
+            key={track.url}
+            kind="subtitles"
+            src={track.url}
+            srcLang={track.lang}
+            label={track.label}
+          />
+        ))}
+      </video>
 
       {waiting && playing && <span className="vp-spinner" aria-label="Завантаження" />}
 
@@ -360,6 +394,18 @@ export function VideoPlayer({ sources, poster, title }) {
             style={{ '--played': `${(muted ? 0 : volume) * 100}%` }}
             aria-label="Гучність"
           />
+
+          {subtitles.length > 0 && (
+            <button
+              type="button"
+              className={`vp-btn ${captions ? 'is-on' : ''}`}
+              onClick={() => setA11y({ captions: !captions })}
+              aria-label={captions ? 'Вимкнути субтитри' : 'Увімкнути субтитри'}
+              aria-pressed={captions}
+            >
+              <CaptionsGlyph />
+            </button>
+          )}
 
           <div className="vp-menu-wrap">
             <button

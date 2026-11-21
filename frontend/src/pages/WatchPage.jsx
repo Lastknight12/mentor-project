@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import { useA11y } from '../a11y.js'
 import { api } from '../api.js'
 import { ArrowLeftIcon, LockIcon, PlayIcon, UnlockIcon } from '../components/Icons.jsx'
 import { PageLoader } from '../components/Loaders.jsx'
@@ -54,6 +55,8 @@ export function WatchPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [trailerPlaying, setTrailerPlaying] = useState(false)
+  const { captions } = useA11y()
+  const captionParams = captions ? '&cc_load_policy=1&hl=uk&cc_lang_pref=uk' : ''
   const [tab, setTab] = useState('film')
 
   useEffect(() => {
@@ -134,12 +137,13 @@ export function WatchPage() {
           <VideoPlayer
             key={movie.id}
             sources={movie.video.sources}
+            subtitles={movie.video.subtitles}
             poster={movie.backdropUrl}
             title={movie.title}
           />
         ) : trailerPlaying && movie.trailerKey ? (
           <iframe
-            src={`https://www.youtube-nocookie.com/embed/${movie.trailerKey}?autoplay=1&rel=0`}
+            src={`https://www.youtube-nocookie.com/embed/${movie.trailerKey}?autoplay=1&rel=0${captionParams}`}
             title={`Трейлер фільму «${movie.title}»`}
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen

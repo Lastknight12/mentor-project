@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
+import { useA11y } from '../a11y.js'
 import { api } from '../api.js'
 import { useAuth } from '../auth.jsx'
 import {
@@ -226,6 +227,8 @@ export function MoviePage() {
   const [favoriteBusy, setFavoriteBusy] = useState(false)
   const [favoriteError, setFavoriteError] = useState('')
   const [trailerPlaying, setTrailerPlaying] = useState(false)
+  const { captions } = useA11y()
+  const captionParams = captions ? '&cc_load_policy=1&hl=uk&cc_lang_pref=uk' : ''
 
   useEffect(() => {
     let active = true
@@ -455,7 +458,7 @@ export function MoviePage() {
           <div className="trailer-frame">
             {movie.trailerKey && trailerPlaying ? (
               <iframe
-                src={`https://www.youtube-nocookie.com/embed/${movie.trailerKey}?autoplay=1&rel=0`}
+                src={`https://www.youtube-nocookie.com/embed/${movie.trailerKey}?autoplay=1&rel=0${captionParams}`}
                 title={`Трейлер фільму «${movie.title}»`}
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
