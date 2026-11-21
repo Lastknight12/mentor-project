@@ -29,9 +29,24 @@ const STEPS = [
     text: 'Кнопка «Що подивитися?» підбере випадковий фільм із високим рейтингом. Можна обрати жанр.',
   },
   {
+    selectors: ['.main-nav a[href="/quiz"]'],
+    title: 'Вікторина',
+    text: 'Перевірте, як добре ви знаєте кіно: 10 питань за кадрами й описами фільмів, а в кінці — цікавий факт про кіно.',
+  },
+  {
     selectors: ['.main-nav a[href="/favorites"]', '.user-chip', '.header-actions .text-link'],
     title: 'Обране',
     text: 'Додавайте фільми в обране сердечком, щоб повернутися до них пізніше. Для цього потрібен акаунт: вхід і реєстрація — у шапці сайту.',
+  },
+  {
+    selectors: ['.a11y-toggle'],
+    title: 'Доступність',
+    text: 'Кнопка для всіх: озвучення сторінки голосом, субтитри, збільшення тексту і висока контрастність. Налаштування запам’ятовуються.',
+  },
+  {
+    selectors: ['.help-btn'],
+    title: 'Потрібна підказка?',
+    text: 'Натисніть «?» у будь-який момент, щоб пройти екскурсію ще раз.',
   },
 ]
 
@@ -130,8 +145,9 @@ export function GuideTour() {
         measure()
         return
       }
+      const existsHidden = step.selectors.some((selector) => document.querySelector(selector))
       attempts += 1
-      if (attempts < 12) setTimeout(locate, 250)
+      if (!existsHidden && attempts < 12) setTimeout(locate, 250)
       else if (index < STEPS.length - 1) setIndex((value) => value + 1)
       else close()
     }
@@ -237,7 +253,7 @@ export function GuideTour() {
           <h2 id="tour-welcome-title">Вітаємо в CineScope!</h2>
           <p>
             Показати, як тут усе працює? Це займе менше хвилини: пошук, фільтри,
-            картки фільмів і підбір «Що подивитися?».
+            «Що подивитися?», вікторина і панель доступності.
           </p>
           <div className="picker-actions tour-welcome-actions">
             <button type="button" className="button button-primary" onClick={startSteps}>

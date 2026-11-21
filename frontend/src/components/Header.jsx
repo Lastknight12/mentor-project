@@ -118,6 +118,10 @@ export function Header() {
             aria-label="Пошук фільму"
           />
         </form>
+        <Link className="mobile-rating-link" to="/quiz">
+          <HelpIcon size={15} />
+          Вікторина
+        </Link>
         <button
           type="button"
           className="mobile-rating-link mobile-random"
