@@ -142,3 +142,14 @@ frontend/
 - Також додано посилання «Перейти до вмісту» (перший Tab), явні підписи кнопок і видимий фокус.
 
 Код: `frontend/src/a11y.js`, `frontend/src/components/AccessibilityWidget.jsx`.
+
+## Публічне розміщення (Render)
+
+Проєкт запускається одним сервісом: сервер Express роздає зібраний сайт і API.
+
+- Build Command: `npm --prefix backend install && npm --prefix frontend install --include=dev && npm --prefix frontend run build`
+- Start Command: `npm start`
+- Змінні середовища: `NODE_VERSION=22`, `JWT_SECRET` (довгий випадковий рядок), `TMDB_ACCESS_TOKEN` та/або `TMDB_API_KEY`.
+- Файл `render.yaml` описує те саме для Render Blueprint.
+
+Увага: безкоштовний тариф Render «засинає» після ~15 хвилин без запитів (перше відкриття триває до хвилини), а файл `backend/data/store.json` (користувачі й обране) скидається при кожному перезапуску. Справжні ключі TMDB зберігайте лише в `backend/.env` або в змінних середовища, не у файлах репозиторію.

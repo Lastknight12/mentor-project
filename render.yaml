@@ -1,0 +1,19 @@
+# Описание сервиса для хостинга Render (https://render.com).
+# Ключи TMDB вводятся в панели Render и в репозиторий не попадают.
+services:
+  - type: web
+    name: cinescope
+    runtime: node
+    plan: free
+    buildCommand: npm --prefix backend install && npm --prefix frontend install --include=dev && npm --prefix frontend run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: 22
+      - key: JWT_SECRET
+        generateValue: true
+      - key: TMDB_ACCESS_TOKEN
+        sync: false
+      - key: TMDB_API_KEY
+        sync: false
