@@ -1,4 +1,5 @@
-import { hasTmdbCredentials } from './config.js'
+import { config, hasTmdbCredentials } from './config.js'
+import { withCache } from './cache.js'
 import {
   demoGenres,
   allDemoMovies,
@@ -137,6 +138,67 @@ function normalizeMovie(raw, genreMap) {
   }
 }
 
+// ---------- Захист: фільми 18+ повністю приховані ----------
+const TITLE_PATTERN = /секс|\bsex|nude|naked|порно|porn|еротик|erotic|\bxxx\b/i
+const SEX_KEYWORDS = /nudity|\bsex\b|sex scene|erotic|softcore|explicit sex|sexual/i
+const STRICT_CERT = /^(NC-17|X|XXX|R18\+?|R-18)$/i
+const ADULT_CERT = /^(R|18|18\+|-18|FSK ?18)$/i
+
+async function fetchAgeInfo(id) {
+  const params = new URLSearchParams({ append_to_response: 'release_dates,keywords' })
+  if (!config.tmdbAccessToken && config.tmdbApiKey) {
+    params.set('api_key', config.tmdbApiKey)
+  }
+  const headers = { accept: 'application/json' }
+  if (config.tmdbAccessToken) {
+    headers.authorization = `Bearer ${config.tmdbAccessToken}`
+  }
+  const response = await fetch(`${config.tmdbBaseUrl}/movie/${id}?${params}`, {
+    headers,
+    signal: AbortSignal.timeout(8000),
+  })
+  if (!response.ok) throw new Error('age info failed')
+  return response.json()
+}
+
+function decideRestricted(info) {
+  if (info.adult === true) return true
+  const certs = []
+  for (const country of info.release_dates?.results || []) {
+    for (const item of country.release_dates || []) {
+      const cert = String(item.certification || '').trim()
+      if (cert) certs.push(cert)
+    }
+  }
+  if (certs.some((cert) => STRICT_CERT.test(cert))) return true
+  const keywords = (info.keywords?.keywords || []).map((item) => item.name || '')
+  const hasSexKeyword = keywords.some((name) => SEX_KEYWORDS.test(name))
+  return hasSexKeyword && certs.some((cert) => ADULT_CERT.test(cert))
+}
+
+// true, якщо фільм 18+ (за назвою, віковим рейтингом або ключовими словами TMDB)
+async function isRestricted(id, ...titles) {
+  if (titles.some((title) => title && TITLE_PATTERN.test(title))) return true
+  if (!hasTmdbCredentials) return false
+  try {
+    const { value } = await withCache(`age:${id}`, 24 * 60 * 60 * 1000, () =>
+      fetchAgeInfo(id),
+    )
+    return decideRestricted(value)
+  } catch {
+    return false
+  }
+}
+
+async function removeRestricted(movies) {
+  const flags = await Promise.all(
+    movies.map((movie) =>
+      isRestricted(movie.id, movie.title, movie.originalTitle),
+    ),
+  )
+  return movies.filter((movie, index) => !flags[index])
+}
+
 function sortResults(results, sort) {
   const sorted = [...results]
   if (sort === 'rating_desc') {
@@ -223,6 +285,8 @@ export async function browseMovies(inputOptions) {
       results = sortResults(results, options.sort)
     }
 
+    results = await removeRestricted(results)
+
     return {
       page: payload.page || options.page || 1,
       totalPages: Math.min(payload.total_pages || 1, MAX_PAGES),
@@ -244,7 +308,11 @@ export async function movieDetails(id) {
   if (hasTmdbCredentials) {
     try {
       const raw = await getTmdbMovieDetails(id)
-      return { movie: normalizeMovie(raw, genreMap), source: 'tmdb' }
+      const movie = normalizeMovie(raw, genreMap)
+      if (await isRestricted(movie.id, movie.title, movie.originalTitle)) {
+        return { movie: null, source: 'tmdb' }
+      }
+      return { movie, source: 'tmdb' }
     } catch (error) {
       if (error.status === 404) return { movie: null, source: 'tmdb' }
     }
@@ -277,8 +345,8 @@ export async function randomMovie({ genreId, exclude = [] } = {}) {
       const all = (payload.results || []).filter((movie) => movie.poster_path)
       const fresh = all.filter((movie) => !exclude.includes(movie.id))
       const list = fresh.length ? fresh : all
-      if (list.length) {
-        const raw = list[Math.floor(Math.random() * list.length)]
+      for (const raw of shuffle(list)) {
+        if (await isRestricted(raw.id, raw.title, raw.original_title)) continue
         return normalizeMovie(raw, genreMap)
       }
     } catch {
@@ -329,7 +397,11 @@ async function loadQuizPool() {
           pool.push({ ...raw, _tmdb: true })
         }
       }
-      if (pool.length >= 12) return pool
+      const flags = await Promise.all(
+        pool.map((raw) => isRestricted(raw.id, raw.title, raw.original_title)),
+      )
+      const safePool = pool.filter((raw, index) => !flags[index])
+      if (safePool.length >= 12) return safePool
     } catch {
       // нижче — демо-каталог
     }
