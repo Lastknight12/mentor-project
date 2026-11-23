@@ -1,127 +1,452 @@
 import { config, hasTmdbCredentials } from './config.js'
 import { withCache } from './cache.js'
+import {
+  demoGenres,
+  allDemoMovies,
+  getDemoMovie,
+  queryDemoMovies,
+  randomDemoMovie,
+} from './demo.js'
+import {
+  discoverMovies,
+  discoverTopMovies,
+  getGenres as getTmdbGenres,
+  getMovieDetails as getTmdbMovieDetails,
+  searchMovies,
+} from './tmdb.js'
 
-export class TmdbError extends Error {
-  constructor(message, status) {
-    super(message)
-    this.name = 'TmdbError'
-    this.status = status
+function imageUrl(path, size) {
+  return path ? `/api/media/tmdb/${size}${path}` : null
+}
+
+function placeholder(kind, id, title) {
+  return `/api/media/${kind}/${id}?title=${encodeURIComponent(title || '')}`
+}
+
+function genreItem(genre) {
+  return { id: genre.id, name: genre.name }
+}
+
+function makeGenreMap(genres) {
+  return new Map(genres.map((genre) => [genre.id, genre]))
+}
+
+function resolveGenres(raw, genreMap) {
+  if (Array.isArray(raw.genres) && raw.genres.length) {
+    return raw.genres.map(genreItem)
+  }
+  return (raw.genre_ids || [])
+    .map((id) => genreMap.get(id))
+    .filter(Boolean)
+    .map(genreItem)
+}
+
+function resolveTrailer(raw) {
+  const videos = raw.videos?.results || []
+  const trailer =
+    videos.find(
+      (video) =>
+        video.site === 'YouTube' &&
+        video.type === 'Trailer' &&
+        video.official,
+    ) ||
+    videos.find(
+      (video) => video.site === 'YouTube' && video.type === 'Trailer',
+    ) ||
+    videos.find((video) => video.site === 'YouTube')
+  return trailer?.key || null
+}
+
+function resolveCredits(raw) {
+  if (!raw.credits) return { director: null, cast: [] }
+  const director = raw.credits.crew?.find(
+    (person) => person.job === 'Director',
+  )
+  return {
+    director: director?.name || null,
+    cast: (raw.credits.cast || []).slice(0, 6).map((person) => ({
+      id: person.id,
+      name: person.name,
+      character: person.character || '',
+      profileUrl: imageUrl(person.profile_path, 'w185'),
+    })),
   }
 }
 
-const sortMap = {
-  popularity_desc: 'popularity.desc',
-  rating_desc: 'vote_average.desc',
-  rating_asc: 'vote_average.asc',
-  year_desc: 'primary_release_date.desc',
-  year_asc: 'primary_release_date.asc',
-  title_asc: 'original_title.asc',
-  title_desc: 'original_title.desc',
-}
+const WATCH_REGIONS = ['UA', 'PL', 'US']
 
-function cleanParams(params) {
-  return Object.fromEntries(
-    Object.entries(params).filter(
-      ([, value]) => value !== undefined && value !== null && value !== '',
-    ),
-  )
-}
-
-async function rawRequest(path, params) {
-  if (!hasTmdbCredentials) {
-    throw new TmdbError('TMDB credentials are not configured', 503)
+// Легальні сервіси, де фільм можна подивитися (дані TMDB / JustWatch).
+function resolveWatch(raw) {
+  const results = raw['watch/providers']?.results
+  if (!results) return null
+  const region = WATCH_REGIONS.find((code) => results[code])
+  if (!region) return null
+  const entry = results[region]
+  const kinds = [
+    ['flatrate', 'subscription'],
+    ['free', 'free'],
+    ['rent', 'rent'],
+    ['buy', 'buy'],
+  ]
+  const providers = []
+  const seen = new Set()
+  for (const [key, type] of kinds) {
+    for (const provider of entry[key] || []) {
+      if (seen.has(provider.provider_id)) continue
+      seen.add(provider.provider_id)
+      providers.push({
+        id: provider.provider_id,
+        name: provider.provider_name,
+        type,
+        logoUrl: imageUrl(provider.logo_path, 'w185'),
+      })
+    }
   }
+  if (!providers.length) return null
+  return { region, link: entry.link || null, providers }
+}
 
-  const query = new URLSearchParams(
-    cleanParams({ language: config.tmdbLanguage, ...params }),
-  )
+function normalizeMovie(raw, genreMap) {
+  const title = raw.title || raw.name || 'Без назви'
+  const releaseDate = raw.release_date || ''
+  const credits = resolveCredits(raw)
+  return {
+    id: raw.id,
+    title,
+    originalTitle: raw.original_title || title,
+    overview: raw.overview || '',
+    releaseDate,
+    year: releaseDate ? Number(releaseDate.slice(0, 4)) : null,
+    rating: Math.round((raw.vote_average || 0) * 10) / 10,
+    voteCount: raw.vote_count || 0,
+    runtime: raw.runtime || null,
+    tagline: raw.tagline || '',
+    status: raw.status || '',
+    language: raw.original_language || '',
+    popularity: raw.popularity || 0,
+    genres: resolveGenres(raw, genreMap),
+    posterUrl:
+      imageUrl(raw.poster_path, 'w500') ||
+      placeholder('poster', raw.id, title),
+    backdropUrl:
+      imageUrl(raw.backdrop_path, 'w1280') ||
+      placeholder('backdrop', raw.id, title),
+    trailerKey: resolveTrailer(raw),
+    watch: resolveWatch(raw),
+    director: credits.director,
+    cast: credits.cast,
+  }
+}
 
+// ---------- Захист: фільми 18+ повністю приховані ----------
+const TITLE_PATTERN = /секс|\bsex|nude|naked|порно|porn|еротик|erotic|\bxxx\b/i
+const SEX_KEYWORDS = /nudity|\bsex\b|sex scene|erotic|softcore|explicit sex|sexual/i
+const STRICT_CERT = /^(NC-17|X|XXX|R18\+?|R-18)$/i
+const ADULT_CERT = /^(R|18|18\+|-18|FSK ?18)$/i
+
+async function fetchAgeInfo(id) {
+  const params = new URLSearchParams({ append_to_response: 'release_dates,keywords' })
   if (!config.tmdbAccessToken && config.tmdbApiKey) {
-    query.set('api_key', config.tmdbApiKey)
+    params.set('api_key', config.tmdbApiKey)
   }
-
   const headers = { accept: 'application/json' }
   if (config.tmdbAccessToken) {
     headers.authorization = `Bearer ${config.tmdbAccessToken}`
   }
-
-  let response
-  try {
-    response = await fetch(`${config.tmdbBaseUrl}${path}?${query}`, {
-      headers,
-      signal: AbortSignal.timeout(12000),
-    })
-  } catch {
-    throw new TmdbError('TMDB is temporarily unavailable', 503)
-  }
-
-  if (!response.ok) {
-    let message = `TMDB request failed with status ${response.status}`
-    try {
-      const body = await response.json()
-      if (body.status_message) message = body.status_message
-    } catch {
-      message = `TMDB request failed with status ${response.status}`
-    }
-    throw new TmdbError(message, response.status)
-  }
-
+  const response = await fetch(`${config.tmdbBaseUrl}/movie/${id}?${params}`, {
+    headers,
+    signal: AbortSignal.timeout(8000),
+  })
+  if (!response.ok) throw new Error('age info failed')
   return response.json()
 }
 
-async function cachedRequest(path, params, ttlMs = config.cacheTtlMs) {
-  const key = `${path}?${new URLSearchParams(cleanParams(params)).toString()}`
-  const result = await withCache(key, ttlMs, () => rawRequest(path, params))
-  return result.value
+function decideRestricted(info) {
+  if (info.adult === true) return true
+  const certs = []
+  for (const country of info.release_dates?.results || []) {
+    for (const item of country.release_dates || []) {
+      const cert = String(item.certification || '').trim()
+      if (cert) certs.push(cert)
+    }
+  }
+  if (certs.some((cert) => STRICT_CERT.test(cert))) return true
+  const keywords = (info.keywords?.keywords || []).map((item) => item.name || '')
+  const hasSexKeyword = keywords.some((name) => SEX_KEYWORDS.test(name))
+  return hasSexKeyword && certs.some((cert) => ADULT_CERT.test(cert))
 }
 
-export function getGenres() {
-  return cachedRequest('/genre/movie/list', {}, 24 * 60 * 60 * 1000)
+// true, якщо фільм 18+ (за назвою, віковим рейтингом або ключовими словами TMDB)
+async function isRestricted(id, ...titles) {
+  if (titles.some((title) => title && TITLE_PATTERN.test(title))) return true
+  if (!hasTmdbCredentials) return false
+  try {
+    const { value } = await withCache(`age:${id}`, 24 * 60 * 60 * 1000, () =>
+      fetchAgeInfo(id),
+    )
+    return decideRestricted(value)
+  } catch {
+    return false
+  }
 }
 
-export function discoverMovies({ page, genreId, year, minRating, sort }) {
-  return cachedRequest('/discover/movie', {
-    page,
-    sort_by: sortMap[sort] || sortMap.popularity_desc,
-    with_genres: genreId || undefined,
-    primary_release_year: year || undefined,
-    'vote_average.gte': minRating || undefined,
-    'vote_count.gte': minRating ? 80 : undefined,
-    include_adult: false,
-    include_video: false,
-  })
-}
-
-// Добірка найкращих фільмів для кнопки «Що подивитися?»
-export function discoverTopMovies({ page, genreId }) {
-  return cachedRequest('/discover/movie', {
-    page,
-    sort_by: 'popularity.desc',
-    with_genres: genreId || undefined,
-    'vote_average.gte': 7,
-    'vote_count.gte': 500,
-    include_adult: false,
-    include_video: false,
-  })
-}
-
-export function searchMovies({ page, query }) {
-  return cachedRequest('/search/movie', {
-    page,
-    query,
-    include_adult: false,
-  })
-}
-
-export function getMovieDetails(id) {
-  return cachedRequest(
-    `/movie/${id}`,
-    {
-      append_to_response: 'videos,credits,watch/providers',
-      include_video_language: 'uk,en,null',
-    },
-    15 * 60 * 1000,
+async function removeRestricted(movies) {
+  const flags = await Promise.all(
+    movies.map((movie) =>
+      isRestricted(movie.id, movie.title, movie.originalTitle),
+    ),
   )
+  return movies.filter((movie, index) => !flags[index])
 }
 
-export const tmdbSortMap = sortMap
+function sortResults(results, sort) {
+  const sorted = [...results]
+  if (sort === 'rating_desc') {
+    return sorted.sort((a, b) => b.rating - a.rating)
+  }
+  if (sort === 'rating_asc') {
+    return sorted.sort((a, b) => a.rating - b.rating)
+  }
+  if (sort === 'year_desc') {
+    return sorted.sort((a, b) => b.releaseDate.localeCompare(a.releaseDate))
+  }
+  if (sort === 'year_asc') {
+    return sorted.sort((a, b) => a.releaseDate.localeCompare(b.releaseDate))
+  }
+  if (sort === 'title_asc') {
+    return sorted.sort((a, b) => a.title.localeCompare(b.title, 'uk'))
+  }
+  if (sort === 'title_desc') {
+    return sorted.sort((a, b) => b.title.localeCompare(a.title, 'uk'))
+  }
+  return sorted.sort((a, b) => b.popularity - a.popularity)
+}
+
+function filterSearchResults(results, { genreId, year, minRating }) {
+  return results.filter((movie) => {
+    if (genreId && !movie.genres.some((genre) => genre.id === Number(genreId))) {
+      return false
+    }
+    if (year && movie.year !== Number(year)) return false
+    if (minRating && movie.rating < Number(minRating)) return false
+    return true
+  })
+}
+
+async function loadGenres() {
+  if (!hasTmdbCredentials) return { genres: demoGenres, source: 'demo' }
+  try {
+    const payload = await getTmdbGenres()
+    return { genres: payload.genres || [], source: 'tmdb' }
+  } catch {
+    return { genres: demoGenres, source: 'demo' }
+  }
+}
+
+export async function listGenres() {
+  const result = await loadGenres()
+  return result.genres
+}
+
+// Максимум сторінок каталогу, які показує сайт
+const MAX_PAGES = 15
+
+export async function browseMovies(inputOptions) {
+  const options = {
+    ...inputOptions,
+    page: Math.min(inputOptions.page || 1, MAX_PAGES),
+  }
+  const { genres } = await loadGenres()
+  const genreMap = makeGenreMap(genres)
+  const query = String(options.query || '').trim()
+
+  if (!hasTmdbCredentials) {
+    const demo = queryDemoMovies(options)
+    return { ...demo, genres, source: 'demo' }
+  }
+
+  try {
+    const payload = query
+      ? await searchMovies({ page: options.page, query })
+      : await discoverMovies({
+          page: options.page,
+          genreId: options.genreId,
+          year: options.year,
+          minRating: options.minRating,
+          sort: options.sort,
+        })
+
+    let results = (payload.results || []).map((movie) =>
+      normalizeMovie(movie, genreMap),
+    )
+
+    if (query) {
+      results = filterSearchResults(results, options)
+      results = sortResults(results, options.sort)
+    }
+
+    results = await removeRestricted(results)
+
+    return {
+      page: payload.page || options.page || 1,
+      totalPages: Math.min(payload.total_pages || 1, MAX_PAGES),
+      totalResults: payload.total_results || 0,
+      results,
+      genres,
+      source: 'tmdb',
+    }
+  } catch {
+    const demo = queryDemoMovies(options)
+    return { ...demo, genres, source: 'demo' }
+  }
+}
+
+export async function movieDetails(id) {
+  const { genres } = await loadGenres()
+  const genreMap = makeGenreMap(genres)
+
+  if (hasTmdbCredentials) {
+    try {
+      const raw = await getTmdbMovieDetails(id)
+      const movie = normalizeMovie(raw, genreMap)
+      if (await isRestricted(movie.id, movie.title, movie.originalTitle)) {
+        return { movie: null, source: 'tmdb' }
+      }
+      return { movie, source: 'tmdb' }
+    } catch (error) {
+      if (error.status === 404) return { movie: null, source: 'tmdb' }
+    }
+  }
+
+  const demo = getDemoMovie(id)
+  if (!demo) return { movie: null, source: 'demo' }
+  return { movie: normalizeMovie(demo, genreMap), source: 'demo' }
+}
+
+export async function moviesByIds(ids) {
+  const settled = await Promise.allSettled(ids.map((id) => movieDetails(id)))
+  return settled
+    .filter((item) => item.status === 'fulfilled' && item.value.movie)
+    .map((item) => item.value.movie)
+}
+
+// Випадковий фільм з високим рейтингом для кнопки «Що подивитися?»
+export async function randomMovie({ genreId, exclude = [] } = {}) {
+  const { genres } = await loadGenres()
+  const genreMap = makeGenreMap(genres)
+
+  if (hasTmdbCredentials) {
+    try {
+      const page = 1 + Math.floor(Math.random() * 10)
+      let payload = await discoverTopMovies({ page, genreId })
+      if (!payload.results?.length && page > 1) {
+        payload = await discoverTopMovies({ page: 1, genreId })
+      }
+      const all = (payload.results || []).filter((movie) => movie.poster_path)
+      const fresh = all.filter((movie) => !exclude.includes(movie.id))
+      const list = fresh.length ? fresh : all
+      for (const raw of shuffle(list)) {
+        if (await isRestricted(raw.id, raw.title, raw.original_title)) continue
+        return normalizeMovie(raw, genreMap)
+      }
+    } catch {
+      // нижче — демо-каталог
+    }
+  }
+
+  const demo = randomDemoMovie({ genreId, exclude })
+  return demo ? normalizeMovie(demo, genreMap) : null
+}
+
+// ---------- Вікторина ----------
+function shuffle(list) {
+  const copy = [...list]
+  for (let index = copy.length - 1; index > 0; index -= 1) {
+    const swap = Math.floor(Math.random() * (index + 1))
+    ;[copy[index], copy[swap]] = [copy[swap], copy[index]]
+  }
+  return copy
+}
+
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+// Ховаємо назву фільму в описі, щоб не підказувати відповідь
+function hideTitle(text, titles) {
+  let result = text
+  for (const title of titles.filter((item) => item && item.length > 2)) {
+    result = result.replace(new RegExp(escapeRegExp(title), 'gi'), '«…»')
+  }
+  return result
+}
+
+async function loadQuizPool() {
+  if (hasTmdbCredentials) {
+    try {
+      const pages = shuffle(Array.from({ length: 10 }, (_, i) => i + 1)).slice(0, 3)
+      const payloads = await Promise.all(
+        pages.map((page) => discoverTopMovies({ page })),
+      )
+      const seen = new Set()
+      const pool = []
+      for (const payload of payloads) {
+        for (const raw of payload.results || []) {
+          if (seen.has(raw.id) || !raw.poster_path) continue
+          seen.add(raw.id)
+          pool.push({ ...raw, _tmdb: true })
+        }
+      }
+      const flags = await Promise.all(
+        pool.map((raw) => isRestricted(raw.id, raw.title, raw.original_title)),
+      )
+      const safePool = pool.filter((raw, index) => !flags[index])
+      if (safePool.length >= 12) return safePool
+    } catch {
+      // нижче — демо-каталог
+    }
+  }
+  return allDemoMovies()
+}
+
+export async function quizQuestions(count = 10) {
+  const pool = await loadQuizPool()
+  const selected = shuffle(pool).slice(0, count)
+  const total = selected.length
+
+  return selected.map((raw, index) => {
+    const title = raw.title || raw.name || 'Без назви'
+    const hasFrame = Boolean(raw._tmdb && raw.backdrop_path)
+    const hasPlot = (raw.overview || '').length >= 50
+    // Чергуємо типи запитань: кадр / опис
+    const wantFrame = index % 2 === 0
+    const type = hasFrame && (wantFrame || !hasPlot) ? 'frame' : 'plot'
+
+    const others = shuffle(pool.filter((item) => item.id !== raw.id)).slice(0, 3)
+    const options = shuffle([raw, ...others]).map((item) => ({
+      id: item.id,
+      title: item.title || item.name || 'Без назви',
+    }))
+
+    const year = raw.release_date ? Number(raw.release_date.slice(0, 4)) : null
+    return {
+      number: index + 1,
+      total,
+      type,
+      image: type === 'frame' ? imageUrl(raw.backdrop_path, 'w780') : null,
+      text:
+        type === 'plot'
+          ? hideTitle(raw.overview || 'Опис відсутній.', [title, raw.original_title])
+          : null,
+      options,
+      answerId: raw.id,
+      movie: {
+        id: raw.id,
+        title,
+        year,
+        posterUrl:
+          imageUrl(raw.poster_path, 'w342') || placeholder('poster', raw.id, title),
+      },
+    }
+  })
+}
