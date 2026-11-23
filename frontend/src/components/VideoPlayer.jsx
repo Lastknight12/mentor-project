@@ -313,9 +313,19 @@ export function VideoPlayer({ sources, subtitles = [], poster, title }) {
           setVolume(event.currentTarget.volume)
           setMuted(event.currentTarget.muted)
         }}
-        onError={() =>
+        onError={() => {
+          // Якщо є інше джерело — пробуємо його автоматично
+          if (sourceIndex < sources.length - 1) {
+            const video = videoRef.current
+            resumeRef.current = video
+              ? { time: video.currentTime, play: !video.paused }
+              : { time: 0, play: false }
+            setError('')
+            setSourceIndex(sourceIndex + 1)
+            return
+          }
           setError('Не вдалося завантажити відео. Спробуйте інше джерело або оновіть сторінку.')
-        }
+        }}
       >
         {subtitles.map((track) => (
           <track

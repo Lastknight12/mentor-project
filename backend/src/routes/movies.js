@@ -1,7 +1,14 @@
 import { Router } from 'express'
 import { optionalAuth, requireAuth } from '../auth.js'
-import { browseMovies, listGenres, movieDetails, quizQuestions, randomMovie } from '../catalogue.js'
-import { getVideo } from '../videos.js'
+import {
+  browseMovies,
+  listGenres,
+  movieDetails,
+  moviesByIds,
+  quizQuestions,
+  randomMovie,
+} from '../catalogue.js'
+import { getVideo, listVideoIds } from '../videos.js'
 import {
   getReviewSummary,
   isFavorite,
@@ -30,6 +37,18 @@ function readFilters(req) {
   }
 }
 
+// Додає прапорець hasVideo фільмам, які можна дивитися на сайті
+async function markVideos(result) {
+  const ids = new Set(await listVideoIds())
+  if (!ids.size || !Array.isArray(result.results)) return result
+  return {
+    ...result,
+    results: result.results.map((movie) =>
+      ids.has(movie.id) ? { ...movie, hasVideo: true } : movie,
+    ),
+  }
+}
+
 export const moviesRouter = Router()
 
 moviesRouter.get('/genres', async (req, res) => {
@@ -44,6 +63,12 @@ moviesRouter.get('/quiz', async (req, res) => {
     return res.status(503).json({ error: 'Не вдалося підготувати вікторину' })
   }
   res.json({ questions })
+})
+
+moviesRouter.get('/online', async (req, res) => {
+  const ids = await listVideoIds()
+  const movies = await moviesByIds(ids)
+  res.json({ items: movies.map((movie) => ({ ...movie, hasVideo: true })) })
 })
 
 moviesRouter.get('/random', async (req, res) => {
@@ -66,12 +91,12 @@ moviesRouter.get('/search', async (req, res) => {
     return res.status(400).json({ error: 'Введіть назву фільму для пошуку' })
   }
   const result = await browseMovies(filters)
-  res.json(result)
+  res.json(await markVideos(result))
 })
 
 moviesRouter.get('/', async (req, res) => {
   const result = await browseMovies(readFilters(req))
-  res.json(result)
+  res.json(await markVideos(result))
 })
 
 moviesRouter.get('/:id/reviews', async (req, res) => {

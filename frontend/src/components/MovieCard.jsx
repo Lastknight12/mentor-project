@@ -10,40 +10,46 @@ export function MovieCard({ movie, action, showFavorite = false }) {
   return (
     <article className="movie-card">
       <div className="movie-poster-wrap">
-        <Link
-          to={`/movie/${movie.id}`}
-          className="movie-card-link"
-          aria-label={`Сторінка фільму «${movie.title}»`}
-        >
-          <div className="movie-poster">
-            <img
-              src={movie.posterUrl}
-              alt={`Постер фільму «${movie.title}»`}
-              loading="lazy"
-            />
-            <div className="poster-shade" />
-            <span className="poster-play" aria-hidden="true">
-              <PlayIcon size={22} />
+      <Link
+        to={`/movie/${movie.id}`}
+        className="movie-card-link"
+        aria-label={`Сторінка фільму «${movie.title}»`}
+      >
+        <div className="movie-poster">
+          <img
+            src={movie.posterUrl}
+            alt={`Постер фільму «${movie.title}»`}
+            loading="lazy"
+          />
+          <div className="poster-shade" />
+          <span className="poster-play" aria-hidden="true">
+            <PlayIcon size={22} />
+          </span>
+          <span className="rating-chip">
+            <StarIcon size={14} />
+            {movie.rating ? movie.rating.toFixed(1) : '—'}
+          </span>
+          {movie.hasVideo && (
+            <span className="online-chip">
+              <PlayIcon size={10} />
+              Онлайн
             </span>
-            <span className="rating-chip">
-              <StarIcon size={14} />
-              {movie.rating ? movie.rating.toFixed(1) : '—'}
+          )}
+          {showFavorite && (
+            <span className="favorite-marker" aria-label="У обраному">
+              <HeartIcon size={16} filled />
             </span>
-            {showFavorite && (
-              <span className="favorite-marker" aria-label="У обраному">
-                <HeartIcon size={16} filled />
-              </span>
-            )}
-          </div>
-        </Link>
-        <Link
-          to={`/movie/${movie.id}/watch`}
-          className="poster-watch"
-          aria-label={`Дивитися фільм «${movie.title}»`}
-        >
-          <PlayIcon size={14} />
-          Дивитися
-        </Link>
+          )}
+        </div>
+      </Link>
+      <Link
+        to={`/movie/${movie.id}/watch`}
+        className="poster-watch"
+        aria-label={`Дивитися фільм «${movie.title}»`}
+      >
+        <PlayIcon size={14} />
+        Дивитися
+      </Link>
       </div>
       <Link to={`/movie/${movie.id}`} className="movie-card-link" tabIndex={-1}>
         <div className="movie-card-info">
@@ -56,4 +62,5 @@ export function MovieCard({ movie, action, showFavorite = false }) {
       </Link>
       {action && <div className="movie-card-action">{action}</div>}
     </article>
-  )}
+  )
+}

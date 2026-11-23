@@ -35,3 +35,23 @@ export async function getVideo(movieId) {
     return null
   }
 }
+
+// Список id фільмів, які можна дивитися на сайті (з backend/videos.json)
+export async function listVideoIds() {
+  try {
+    const data = JSON.parse(await readFile(videosFile, 'utf8'))
+    return Object.keys(data)
+      .filter((key) => /^\d+$/.test(key))
+      .filter((key) => {
+        const item = data[key]
+        return (
+          item &&
+          Array.isArray(item.sources) &&
+          item.sources.some((source) => /^https?:\/\//i.test(source?.url || ''))
+        )
+      })
+      .map(Number)
+  } catch {
+    return []
+  }
+}

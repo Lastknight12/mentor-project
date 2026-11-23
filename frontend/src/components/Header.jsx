@@ -1,7 +1,14 @@
 import { useEffect, useState } from 'react'
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth.jsx'
-import { DiceIcon, HelpIcon, LogoutIcon, SearchIcon, StarIcon } from './Icons.jsx'
+import {
+  DiceIcon,
+  HelpIcon,
+  LogoutIcon,
+  PlayIcon,
+  SearchIcon,
+  StarIcon,
+} from './Icons.jsx'
 import { TOUR_EVENT } from './GuideTour.jsx'
 import { RandomPicker } from './RandomPicker.jsx'
 
@@ -42,6 +49,7 @@ export function Header() {
           <NavLink to="/" end>
             Каталог
           </NavLink>
+          <NavLink to="/online">Онлайн</NavLink>
           <NavLink to="/quiz">Вікторина</NavLink>
           <NavLink to="/favorites">Обране</NavLink>
         </nav>
@@ -118,6 +126,10 @@ export function Header() {
             aria-label="Пошук фільму"
           />
         </form>
+        <Link className="mobile-rating-link" to="/online">
+          <PlayIcon size={15} />
+          Онлайн
+        </Link>
         <Link className="mobile-rating-link" to="/quiz">
           <HelpIcon size={15} />
           Вікторина
