@@ -11,6 +11,7 @@ import {
 } from './Icons.jsx'
 import { TOUR_EVENT } from './GuideTour.jsx'
 import { RandomPicker } from './RandomPicker.jsx'
+import { SearchSuggest } from './SearchSuggest.jsx'
 
 export function Header() {
   const { user, logout } = useAuth()
@@ -66,6 +67,7 @@ export function Header() {
           <button type="submit" aria-label="Знайти">
             <SearchIcon size={17} />
           </button>
+          <SearchSuggest term={term} onPick={() => setTerm('')} />
         </form>
 
         <div className="header-actions">
@@ -125,6 +127,7 @@ export function Header() {
             placeholder="Пошук фільму..."
             aria-label="Пошук фільму"
           />
+          <SearchSuggest term={term} onPick={() => setTerm('')} />
         </form>
         <Link className="mobile-rating-link" to="/online">
           <PlayIcon size={15} />
