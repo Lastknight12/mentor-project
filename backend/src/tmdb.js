@@ -117,7 +117,7 @@ export function getMovieDetails(id) {
   return cachedRequest(
     `/movie/${id}`,
     {
-      append_to_response: 'videos,credits,watch/providers',
+      append_to_response: 'videos,credits,watch/providers,recommendations',
       include_video_language: 'uk,en,null',
     },
     15 * 60 * 1000,

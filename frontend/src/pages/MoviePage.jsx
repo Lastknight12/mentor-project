@@ -16,6 +16,7 @@ import {
   UserIcon,
 } from '../components/Icons.jsx'
 import { PageLoader } from '../components/Loaders.jsx'
+import { MovieCard } from '../components/MovieCard.jsx'
 
 function formatRuntime(minutes) {
   if (!minutes) return null
@@ -227,6 +228,7 @@ export function MoviePage() {
   const [error, setError] = useState('')
   const [favoriteBusy, setFavoriteBusy] = useState(false)
   const [favoriteError, setFavoriteError] = useState('')
+  const [shareNote, setShareNote] = useState('')
   const [trailerPlaying, setTrailerPlaying] = useState(false)
   const { captions } = useA11y()
   const captionParams = captions ? '&cc_load_policy=1&hl=uk&cc_lang_pref=uk' : ''
@@ -260,6 +262,21 @@ export function MoviePage() {
     document
       .getElementById('trailer')
       ?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+
+  async function shareMovie() {
+    const url = window.location.href
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: movie.title, url })
+        return
+      }
+      await navigator.clipboard.writeText(url)
+      setShareNote('Посилання скопійовано')
+    } catch {
+      setShareNote('Скопіюйте посилання з адресного рядка')
+    }
+    setTimeout(() => setShareNote(''), 2500)
   }
 
   async function toggleFavorite() {
@@ -386,6 +403,9 @@ export function MoviePage() {
                   <PlayIcon size={17} />
                   Дивитися трейлер
                 </button>
+                <button type="button" className="button button-ghost" onClick={shareMovie}>
+                  Поділитися
+                </button>
                 {movie.video ? (
                   <Link
                     className="button button-watch"
@@ -422,6 +442,11 @@ export function MoviePage() {
                   </Link>
                 )}
               </div>
+              {shareNote && (
+                <p className="share-note" role="status">
+                  {shareNote}
+                </p>
+              )}
               {favoriteError && <p className="form-error">{favoriteError}</p>}
 
               <dl className="detail-facts">
@@ -523,6 +548,22 @@ export function MoviePage() {
                   <strong>{person.name}</strong>
                   {person.character && <span>{person.character}</span>}
                 </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {movie.similar?.length > 0 && (
+          <section className="similar-section">
+            <div className="section-heading">
+              <div>
+                <span className="eyebrow">Рекомендації</span>
+                <h2>Схожі фільми</h2>
+              </div>
+            </div>
+            <div className="movie-grid">
+              {movie.similar.map((item) => (
+                <MovieCard key={item.id} movie={item} />
               ))}
             </div>
           </section>

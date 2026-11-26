@@ -41,20 +41,17 @@ function resolveGenres(raw, genreMap) {
     .map(genreItem)
 }
 
+// Обираємо трейлер: спочатку українською (дубляж/субтитри), потім офіційний англійський
 function resolveTrailer(raw) {
-  const videos = raw.videos?.results || []
-  const trailer =
-    videos.find(
-      (video) =>
-        video.site === 'YouTube' &&
-        video.type === 'Trailer' &&
-        video.official,
-    ) ||
-    videos.find(
-      (video) => video.site === 'YouTube' && video.type === 'Trailer',
-    ) ||
-    videos.find((video) => video.site === 'YouTube')
-  return trailer?.key || null
+  const videos = (raw.videos?.results || []).filter(
+    (video) => video.site === 'YouTube',
+  )
+  const trailers = videos.filter((video) => video.type === 'Trailer')
+  const official = trailers.filter((video) => video.official)
+  const ukrainian = trailers.find((video) => video.iso_639_1 === 'uk')
+  const picked =
+    ukrainian || official[0] || trailers[0] || videos[0]
+  return picked?.key || null
 }
 
 function resolveCredits(raw) {
@@ -301,7 +298,20 @@ export async function browseMovies(inputOptions) {
   }
 }
 
-export async function movieDetails(id) {
+// Схожі фільми (рекомендації TMDB) без контенту 18+
+async function loadSimilar(raw, genreMap) {
+  try {
+    const list = (raw.recommendations?.results || [])
+      .filter((item) => item.poster_path)
+      .slice(0, 12)
+      .map((item) => normalizeMovie(item, genreMap))
+    return (await removeRestricted(list)).slice(0, 6)
+  } catch {
+    return []
+  }
+}
+
+export async function movieDetails(id, { withSimilar = false } = {}) {
   const { genres } = await loadGenres()
   const genreMap = makeGenreMap(genres)
 
@@ -312,6 +322,7 @@ export async function movieDetails(id) {
       if (await isRestricted(movie.id, movie.title, movie.originalTitle)) {
         return { movie: null, source: 'tmdb' }
       }
+      if (withSimilar) movie.similar = await loadSimilar(raw, genreMap)
       return { movie, source: 'tmdb' }
     } catch (error) {
       if (error.status === 404) return { movie: null, source: 'tmdb' }

@@ -143,7 +143,7 @@ moviesRouter.get('/:id', optionalAuth, async (req, res) => {
   const id = movieId(req.params.id)
   if (!id) return res.status(400).json({ error: 'Некоректний ідентифікатор фільму' })
 
-  const result = await movieDetails(id)
+  const result = await movieDetails(id, { withSimilar: true })
   if (!result.movie) {
     return res.status(404).json({ error: 'Фільм не знайдено' })
   }
