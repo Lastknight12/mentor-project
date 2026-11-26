@@ -18,6 +18,25 @@ import {
 import { PageLoader } from '../components/Loaders.jsx'
 import { MovieCard } from '../components/MovieCard.jsx'
 
+// «У прокаті» лише для свіжих фільмів; старим показуємо рік виходу.
+const NOW_PLAYING_DAYS = 90
+
+function statusLabel(movie) {
+  if (movie.status === 'Released') {
+    const released = movie.releaseDate ? new Date(movie.releaseDate) : null
+    if (released && !Number.isNaN(released.getTime())) {
+      const ageDays = (Date.now() - released.getTime()) / 86400000
+      if (ageDays <= NOW_PLAYING_DAYS) return 'У прокаті'
+    }
+    return movie.year ? `Вийшов ${movie.year}` : 'Фільм'
+  }
+  if (['In Production', 'Post Production', 'Planned', 'Rumored'].includes(movie.status)) {
+    return 'Незабаром'
+  }
+  if (movie.status === 'Canceled') return 'Скасовано'
+  return 'Фільм'
+}
+
 function formatRuntime(minutes) {
   if (!minutes) return null
   const hours = Math.floor(minutes / 60)
@@ -341,7 +360,7 @@ export function MoviePage() {
 
             <div className="detail-copy">
               <span className="eyebrow">
-                {movie.status === 'Released' ? 'У прокаті' : 'Фільм'}
+                {statusLabel(movie)}
               </span>
               <h1>{movie.title}</h1>
               {movie.tagline && <p className="tagline">«{movie.tagline}»</p>}
