@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
+import { ratingLabel } from '../rating.js'
 import { api } from '../api.js'
 import { CloseIcon, DiceIcon, StarIcon } from './Icons.jsx'
 
@@ -119,7 +120,7 @@ export function RandomPicker({ onClose }) {
               <h3>{movie.title}</h3>
               <p className="picker-meta">
                 <span className="picker-rating">
-                  <StarIcon size={14} /> {movie.rating}
+                  <StarIcon size={14} /> {ratingLabel(movie)}
                 </span>
                 {movie.year && <span>{movie.year}</span>}
                 {movie.genres.slice(0, 3).map((genre) => (
@@ -153,6 +154,7 @@ export function RandomPicker({ onClose }) {
           </button>
         </div>
       </div>
-    </div>
-  , document.body)
+    </div>,
+    document.body,
+  )
 }

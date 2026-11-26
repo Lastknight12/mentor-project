@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { HeartIcon, PlayIcon, StarIcon } from './Icons.jsx'
+import { ratingLabel } from '../rating.js'
 
 export function MovieCard({ movie, action, showFavorite = false }) {
   const genreLine = movie.genres
@@ -27,8 +28,9 @@ export function MovieCard({ movie, action, showFavorite = false }) {
           </span>
           <span className="rating-chip">
             <StarIcon size={14} />
-            {movie.rating ? movie.rating.toFixed(1) : '—'}
+            {ratingLabel(movie)}
           </span>
+          {movie.restricted && <span className="age-chip">18+</span>}
           {movie.hasVideo && (
             <span className="online-chip">
               <PlayIcon size={10} />

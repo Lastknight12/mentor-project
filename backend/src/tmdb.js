@@ -86,7 +86,7 @@ export function discoverMovies({ page, genreId, year, minRating, sort }) {
     with_genres: genreId || undefined,
     primary_release_year: year || undefined,
     'vote_average.gte': minRating || undefined,
-    'vote_count.gte': minRating ? 80 : undefined,
+    'vote_count.gte': sort === 'rating_desc' || sort === 'rating_asc' ? 200 : minRating ? 80 : undefined,
     include_adult: false,
     include_video: false,
   })
@@ -116,7 +116,10 @@ export function searchMovies({ page, query }) {
 export function getMovieDetails(id) {
   return cachedRequest(
     `/movie/${id}`,
-    { append_to_response: 'videos,credits,watch/providers' },
+    {
+      append_to_response: 'videos,credits,watch/providers',
+      include_video_language: 'uk,en,null',
+    },
     15 * 60 * 1000,
   )
 }

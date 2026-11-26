@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useA11y } from '../a11y.js'
+import { hasReliableRating, ratingLabel } from '../rating.js'
 import { api } from '../api.js'
 import { useAuth } from '../auth.jsx'
 import {
@@ -331,7 +332,7 @@ export function MoviePage() {
               <div className="detail-meta">
                 <span className="detail-rating">
                   <StarIcon size={17} />
-                  {movie.rating ? movie.rating.toFixed(1) : '—'}
+                  {ratingLabel(movie)}
                 </span>
                 {movie.year && (
                   <span>
@@ -438,7 +439,13 @@ export function MoviePage() {
                 )}
                 <div>
                   <dt>Оцінка TMDB</dt>
-                  <dd>{movie.rating ? `${movie.rating} / 10` : '—'}</dd>
+                  <dd>
+                    {hasReliableRating(movie)
+                      ? `${movie.rating} / 10`
+                      : movie.rating
+                        ? 'Замало оцінок'
+                        : '—'}
+                  </dd>
                 </div>
               </dl>
             </div>

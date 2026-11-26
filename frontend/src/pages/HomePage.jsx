@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { api } from '../api.js'
+import { ratingLabel } from '../rating.js'
 import { FilterBar } from '../components/FilterBar.jsx'
 import {
   ArrowUpRightIcon,
@@ -35,7 +36,7 @@ function Hero({ movie }) {
         <div className="hero-meta">
           <span className="hero-rating">
             <StarIcon size={16} />
-            {movie.rating ? movie.rating.toFixed(1) : '—'}
+            {ratingLabel(movie)}
           </span>
           <span>
             <CalendarIcon size={16} />
@@ -60,7 +61,7 @@ function Hero({ movie }) {
 
       <div className="hero-score">
         <span>Рейтинг</span>
-        <strong>{movie.rating ? movie.rating.toFixed(1) : '—'}</strong>
+        <strong>{ratingLabel(movie)}</strong>
         <small>з 10</small>
       </div>
 
