@@ -408,10 +408,15 @@ async function loadQuizPool() {
           pool.push({ ...raw, _tmdb: true })
         }
       }
+      // Для вікторини достатньо 30 фільмів: так вікове перевіряння
+      // (запити до TMDB) виконується швидше, особливо при першому запуску.
+      const candidates = shuffle(pool).slice(0, 30)
       const flags = await Promise.all(
-        pool.map((raw) => isRestricted(raw.id, raw.title, raw.original_title)),
+        candidates.map((raw) =>
+          isRestricted(raw.id, raw.title, raw.original_title),
+        ),
       )
-      const safePool = pool.filter((raw, index) => !flags[index])
+      const safePool = candidates.filter((raw, index) => !flags[index])
       if (safePool.length >= 12) return safePool
     } catch {
       // нижче — демо-каталог
