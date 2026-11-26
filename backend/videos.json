@@ -2,45 +2,99 @@
   "10378": {
     "license": "Big Buck Bunny © Blender Foundation | peach.blender.org — CC BY 3.0",
     "sources": [
-      { "label": "720p", "url": "https://archive.org/download/BigBuckBunny_124/Content/big_buck_bunny_720p_surround.mp4" }
+      {
+        "label": "720p",
+        "url": "https://archive.org/download/BigBuckBunny_124/Content/big_buck_bunny_720p_surround.mp4"
+      }
     ]
   },
   "133701": {
     "license": "Tears of Steel © Blender Foundation | mango.blender.org — CC BY 3.0",
     "sources": [
-      { "label": "720p", "url": "https://archive.org/download/Tears-of-Steel/tears_of_steel_720p.mp4" },
-      { "label": "1080p", "url": "https://archive.org/download/Tears-of-Steel/tears_of_steel_1080p.mp4" }
+      {
+        "label": "720p",
+        "url": "https://archive.org/download/Tears-of-Steel/tears_of_steel_720p.mp4"
+      },
+      {
+        "label": "1080p",
+        "url": "https://archive.org/download/Tears-of-Steel/tears_of_steel_1080p.mp4"
+      }
     ]
   },
   "45745": {
     "license": "Sintel © Blender Foundation | durian.blender.org — CC BY 3.0",
     "sources": [
-      { "label": "Оригінал", "url": "https://archive.org/download/sintel-open-movie-by-blender/Sintel%20-%20Open%20Movie%20by%20Blender.mp4" }
+      {
+        "label": "Оригінал",
+        "url": "https://archive.org/download/sintel-open-movie-by-blender/Sintel%20-%20Open%20Movie%20by%20Blender.mp4"
+      }
     ]
   },
-  "9761": {
+  "5373": {
     "license": "Elephants Dream © Blender Foundation | orange.blender.org — CC BY 2.5",
     "sources": [
-      { "label": "HD", "url": "https://archive.org/download/ElephantsDream/ed_hd.mp4" },
-      { "label": "1024", "url": "https://archive.org/download/ElephantsDream/ed_1024.mp4" }
+      {
+        "label": "HD",
+        "url": "https://archive.org/download/ElephantsDream/ed_hd.mp4"
+      },
+      {
+        "label": "1024",
+        "url": "https://archive.org/download/ElephantsDream/ed_1024.mp4"
+      }
     ]
   },
   "775": {
     "license": "Le Voyage dans la Lune (1902), Жорж Мельєс — суспільне надбання; оцифровка CC BY 3.0",
     "sources": [
-      { "label": "512kb", "url": "https://archive.org/download/ATripToTheMoon20Fps/TripToTheMoon20Fps_512kb.mp4" }
+      {
+        "label": "512kb",
+        "url": "https://archive.org/download/ATripToTheMoon20Fps/TripToTheMoon20Fps_512kb.mp4"
+      }
     ]
   },
   "643": {
     "license": "«Броненосець Потьомкін» (1925), Сергій Ейзенштейн — суспільне надбання",
     "sources": [
-      { "label": "512kb", "url": "https://archive.org/download/BattleshipPotemkin/Battleship_Potemkin_512kb.mp4" }
+      {
+        "label": "512kb",
+        "url": "https://archive.org/download/BattleshipPotemkin/Battleship_Potemkin_512kb.mp4"
+      }
     ]
   },
   "234": {
     "license": "«Кабінет доктора Калігарі» (1920), Роберт Віне — суспільне надбання",
     "sources": [
-      { "label": "512kb", "url": "https://archive.org/download/DasKabinettdesDoktorCaligariTheCabinetofDrCaligari/The_Cabinet_of_Dr._Caligari_512kb.mp4" }
+      {
+        "label": "512kb",
+        "url": "https://archive.org/download/DasKabinettdesDoktorCaligariTheCabinetofDrCaligari/The_Cabinet_of_Dr._Caligari_512kb.mp4"
+      }
+    ]
+  },
+  "26317": {
+    "license": "«Людина з кіноапаратом» (1929), Дзиґа Вертов — суспільне надбання",
+    "sources": [
+      {
+        "label": "512kb",
+        "url": "https://archive.org/download/ChelovekskinoapparatomManWithAMovieCamera/Chelovek_s_kino-apparatom_512kb.mp4"
+      }
+    ]
+  },
+  "358332": {
+    "license": "Cosmos Laundromat: First Cycle © Blender Foundation | gooseberry.blender.org — CC BY 4.0",
+    "sources": [
+      {
+        "label": "1080p",
+        "url": "https://archive.org/download/CosmosLaundromatFirstCycle/Cosmos%20Laundromat%20-%20First%20Cycle%20(1080p).mp4"
+      }
+    ]
+  },
+  "631": {
+    "license": "«Схід сонця» (1927), Ф. В. Мурнау — суспільне надбання",
+    "sources": [
+      {
+        "label": "Оригінал",
+        "url": "https://archive.org/download/sunrise_1927/sunrise_1927.ia.mp4"
+      }
     ]
   }
 }
