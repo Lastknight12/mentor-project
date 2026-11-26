@@ -1,6 +1,7 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import { AuthProvider } from './auth.jsx'
 import { Layout } from './components/Layout.jsx'
+import { ServerWakeup } from './components/ServerWakeup.jsx'
 import { AuthPage } from './pages/AuthPage.jsx'
 import { FavoritesPage } from './pages/FavoritesPage.jsx'
 import { HomePage } from './pages/HomePage.jsx'
@@ -13,6 +14,7 @@ import { NotFoundPage } from './pages/NotFoundPage.jsx'
 function App() {
   return (
     <BrowserRouter>
+      <ServerWakeup />
       <AuthProvider>
         <Routes>
           <Route element={<Layout />}>

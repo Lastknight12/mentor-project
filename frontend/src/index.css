@@ -4243,3 +4243,87 @@ html.a11y-contrast :focus-visible {
   font-size: 0.9rem;
   color: var(--accent, #ffb35c);
 }
+
+/* Екран «сервер прокидається» (безкоштовний хостинг) */
+.wakeup {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: radial-gradient(circle at 50% 30%, #1a1626 0%, var(--bg) 70%);
+}
+
+.wakeup-card {
+  max-width: 440px;
+  text-align: center;
+}
+
+.wakeup-card h2 {
+  margin: 24px 0 12px;
+  font-family: var(--display);
+  font-size: 2rem;
+  color: var(--text);
+}
+
+.wakeup-card p {
+  margin: 0 0 16px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.wakeup-timer {
+  display: inline-block;
+  padding: 6px 14px;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  color: var(--accent-soft);
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.wakeup-slow {
+  margin-top: 16px;
+  color: var(--accent);
+}
+
+.wakeup-bars {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 6px;
+  height: 44px;
+}
+
+.wakeup-bars span {
+  width: 9px;
+  height: 100%;
+  border-radius: 4px;
+  background: linear-gradient(180deg, var(--accent-soft), var(--accent-deep));
+  transform-origin: bottom;
+  animation: wakeup-bar 1.1s ease-in-out infinite;
+}
+
+.wakeup-bars span:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.wakeup-bars span:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+@keyframes wakeup-bar {
+  0%,
+  100% {
+    transform: scaleY(0.35);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wakeup-bars span {
+    animation: none;
+  }
+}
