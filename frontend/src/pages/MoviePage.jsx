@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useA11y } from '../a11y.js'
 import { hasReliableRating, ratingLabel } from '../rating.js'
+import { countryName } from '../countries.js'
 import { api } from '../api.js'
 import { useAuth } from '../auth.jsx'
 import {
@@ -480,6 +481,12 @@ export function MoviePage() {
                   <div>
                     <dt>Режисер</dt>
                     <dd>{movie.director}</dd>
+                  </div>
+                )}
+                {movie.countries?.length > 0 && (
+                  <div>
+                    <dt>Країна</dt>
+                    <dd>{movie.countries.slice(0, 3).map(countryName).join(', ')}</dd>
                   </div>
                 )}
                 {movie.releaseDate && (

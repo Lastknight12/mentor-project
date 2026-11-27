@@ -9,6 +9,14 @@
       content="CineScope — каталог фільмів, трейлери, рецензії та особиста колекція обраного."
     />
     <title>CineScope — кіно, яке варте уваги</title>
+    <script>
+      // Світла тема: застосовуємо до першого малювання, щоб не було «спалаху»
+      try {
+        if (localStorage.getItem('cinescope_theme') === 'light') {
+          document.documentElement.setAttribute('data-theme', 'light')
+        }
+      } catch (error) {}
+    </script>
   </head>
   <body>
     <div id="root"></div>

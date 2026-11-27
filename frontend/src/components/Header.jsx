@@ -5,10 +5,13 @@ import {
   DiceIcon,
   HelpIcon,
   LogoutIcon,
+  MoonIcon,
   PlayIcon,
   SearchIcon,
   StarIcon,
+  SunIcon,
 } from './Icons.jsx'
+import { useTheme } from '../theme.js'
 import { TOUR_EVENT } from './GuideTour.jsx'
 import { RandomPicker } from './RandomPicker.jsx'
 import { SearchSuggest } from './SearchSuggest.jsx'
@@ -19,6 +22,7 @@ export function Header() {
   const navigate = useNavigate()
   const [term, setTerm] = useState('')
   const [pickerOpen, setPickerOpen] = useState(false)
+  const { theme, toggleTheme } = useTheme()
 
   useEffect(() => {
     if (location.pathname === '/') {
@@ -78,6 +82,15 @@ export function Header() {
           >
             <DiceIcon size={17} />
             <span>Що подивитися?</span>
+          </button>
+          <button
+            type="button"
+            className="help-btn theme-btn"
+            onClick={toggleTheme}
+            aria-label={theme === 'light' ? 'Увімкнути темну тему' : 'Увімкнути світлу тему'}
+            title={theme === 'light' ? 'Темна тема' : 'Світла тема'}
+          >
+            {theme === 'light' ? <MoonIcon size={19} /> : <SunIcon size={19} />}
           </button>
           <button
             type="button"

@@ -79,11 +79,12 @@ export function getGenres() {
   return cachedRequest('/genre/movie/list', {}, 24 * 60 * 60 * 1000)
 }
 
-export function discoverMovies({ page, genreId, year, minRating, sort }) {
+export function discoverMovies({ page, genreId, year, minRating, sort, country }) {
   return cachedRequest('/discover/movie', {
     page,
     sort_by: sortMap[sort] || sortMap.popularity_desc,
     with_genres: genreId || undefined,
+    with_origin_country: country || undefined,
     primary_release_year: year || undefined,
     'vote_average.gte': minRating || undefined,
     'vote_count.gte': sort === 'rating_desc' || sort === 'rating_asc' ? 200 : minRating ? 80 : undefined,

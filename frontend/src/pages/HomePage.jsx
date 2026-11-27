@@ -108,15 +108,17 @@ export function HomePage() {
   const genreId = searchParams.get('genre') || ''
   const year = searchParams.get('year') || ''
   const minRating = searchParams.get('minRating') || ''
+  const country = searchParams.get('country') || ''
   const sort = searchParams.get('sort') || 'popularity_desc'
   const page = Number(searchParams.get('page')) || 1
 
-  const filters = { query, genreId, year, minRating, sort }
+  const filters = { query, genreId, year, minRating, country, sort }
   const isDefaultView =
     !query &&
     !genreId &&
     !year &&
     !minRating &&
+    !country &&
     sort === 'popularity_desc' &&
     page === 1
 
@@ -145,6 +147,7 @@ export function HomePage() {
       genre: genreId,
       year,
       minRating,
+      country,
       sort,
       query,
     }
@@ -172,7 +175,7 @@ export function HomePage() {
     return () => {
       active = false
     }
-  }, [query, genreId, year, minRating, sort, page])
+  }, [query, genreId, year, minRating, country, sort, page])
 
   const featured = useMemo(
     () => (isDefaultView && !loading ? movies[0] : null),

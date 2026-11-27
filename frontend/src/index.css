@@ -4521,3 +4521,105 @@ html.a11y-contrast :focus-visible {
   -webkit-appearance: none;
   appearance: none;
 }
+
+/* ---------- «Ще фільтри», тема, FAQ ---------- */
+.filter-more {
+  display: flex;
+  align-items: flex-end;
+}
+
+.more-filters {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 16px;
+  border: 1px dashed var(--border-strong);
+  border-radius: 14px;
+  background: transparent;
+  color: var(--text-soft);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.more-filters:hover,
+.more-filters[aria-expanded='true'] {
+  border-color: var(--accent);
+  color: var(--accent-soft);
+}
+
+/* Світла тема: інвертуємо кольори сторінки, а зображення й відео повертаємо як є */
+html[data-theme='light'] {
+  filter: invert(1) hue-rotate(180deg);
+}
+
+html[data-theme='light'] :is(img, video, iframe, canvas) {
+  filter: invert(1) hue-rotate(180deg);
+}
+
+.faq-page {
+  max-width: 820px;
+}
+
+.faq-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.faq-item {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface);
+}
+
+.faq-item summary {
+  padding: 16px 20px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.faq-item[open] summary {
+  color: var(--accent-soft);
+}
+
+.faq-item p {
+  margin: 0;
+  padding: 0 20px 18px;
+  color: var(--text-soft);
+  line-height: 1.65;
+}
+
+.faq-feedback {
+  margin-top: 40px;
+  padding: 24px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: var(--surface);
+}
+
+.faq-feedback h2 {
+  margin: 0 0 8px;
+  font-family: var(--display);
+}
+
+.faq-feedback > p {
+  margin: 0 0 18px;
+  color: var(--muted);
+}
+
+.faq-feedback textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface-2);
+  color: var(--text);
+  font: inherit;
+  resize: vertical;
+}
+
+.faq-back {
+  margin: 18px 0 0;
+}

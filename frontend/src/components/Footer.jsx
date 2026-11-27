@@ -28,6 +28,7 @@ export function Footer() {
           <h3>Навігація</h3>
           <Link to="/">Каталог</Link>
           <Link to="/favorites">Обране</Link>
+          <Link to="/faq">Часті запитання</Link>
           <Link to="/login">Вхід</Link>
         </div>
 

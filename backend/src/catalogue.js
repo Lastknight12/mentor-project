@@ -103,6 +103,14 @@ function resolveWatch(raw) {
   return { region, link: entry.link || null, providers }
 }
 
+// Країни виробництва (коди ISO), напр. ['US', 'GB']
+function resolveCountries(raw) {
+  const fromDetails = (raw.production_countries || [])
+    .map((country) => country.iso_3166_1)
+    .filter(Boolean)
+  return fromDetails.length ? fromDetails : raw.origin_country || []
+}
+
 function normalizeMovie(raw, genreMap) {
   const title = raw.title || raw.name || 'Без назви'
   const releaseDate = raw.release_date || ''
@@ -120,6 +128,7 @@ function normalizeMovie(raw, genreMap) {
     tagline: raw.tagline || '',
     status: raw.status || '',
     language: raw.original_language || '',
+    countries: resolveCountries(raw),
     popularity: raw.popularity || 0,
     genres: resolveGenres(raw, genreMap),
     posterUrl:
@@ -271,6 +280,7 @@ export async function browseMovies(inputOptions) {
           year: options.year,
           minRating: options.minRating,
           sort: options.sort,
+          country: options.country,
         })
 
     let results = (payload.results || []).map((movie) =>

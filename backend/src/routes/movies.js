@@ -32,6 +32,9 @@ function readFilters(req) {
     genreId: req.query.genre ? Number(req.query.genre) : null,
     year: req.query.year ? Number(req.query.year) : null,
     minRating: req.query.minRating ? Number(req.query.minRating) : null,
+    country: /^[A-Za-z]{2}$/.test(String(req.query.country || ''))
+      ? String(req.query.country).toUpperCase()
+      : null,
     sort: String(req.query.sort || 'popularity_desc'),
     query: String(req.query.query || '').trim(),
   }

@@ -1,3 +1,5 @@
+import { useState } from 'react'
+import { COUNTRY_OPTIONS, countryName } from '../countries.js'
 import { CloseIcon, SlidersIcon } from './Icons.jsx'
 
 const years = Array.from(
@@ -6,7 +8,12 @@ const years = Array.from(
 )
 
 export function FilterBar({ filters, genres, onChange, onReset, shown }) {
+  // Рідкісні фільтри сховані під кнопкою; якщо один із них заданий — показуємо
+  const hasExtra = Boolean(filters.year || filters.minRating || filters.country)
+  const [moreOpen, setMoreOpen] = useState(hasExtra)
+  const extraVisible = moreOpen
   const hasFilters =
+    filters.country ||
     filters.query ||
     filters.genreId ||
     filters.year ||
@@ -50,6 +57,34 @@ export function FilterBar({ filters, genres, onChange, onReset, shown }) {
         </label>
 
         <label className="filter-field">
+          <span>Сортування</span>
+          <select
+            value={filters.sort}
+            onChange={(event) => onChange({ sort: event.target.value })}
+          >
+            <option value="popularity_desc">За популярністю</option>
+            <option value="rating_desc">Рейтинг: спочатку вищі</option>
+            <option value="rating_asc">Рейтинг: спочатку нижчі</option>
+            <option value="year_desc">Рік: спочатку нові</option>
+            <option value="year_asc">Рік: спочатку старі</option>
+            <option value="title_asc">Назва: А–Я</option>
+            <option value="title_desc">Назва: Я–А</option>
+          </select>
+        </label>
+        <div className="filter-more">
+          <button
+            type="button"
+            className="more-filters"
+            aria-expanded={extraVisible}
+            onClick={() => setMoreOpen((value) => !value)}
+          >
+            <SlidersIcon size={15} />
+            {extraVisible ? 'Менше фільтрів' : 'Ще фільтри'}
+          </button>
+        </div>
+        {extraVisible && (
+          <>
+        <label className="filter-field">
           <span>Рік</span>
           <select
             value={filters.year || ''}
@@ -79,20 +114,21 @@ export function FilterBar({ filters, genres, onChange, onReset, shown }) {
         </label>
 
         <label className="filter-field">
-          <span>Сортування</span>
+          <span>Країна</span>
           <select
-            value={filters.sort}
-            onChange={(event) => onChange({ sort: event.target.value })}
+            value={filters.country || ''}
+            onChange={(event) => onChange({ country: event.target.value })}
           >
-            <option value="popularity_desc">За популярністю</option>
-            <option value="rating_desc">Рейтинг: спочатку вищі</option>
-            <option value="rating_asc">Рейтинг: спочатку нижчі</option>
-            <option value="year_desc">Рік: спочатку нові</option>
-            <option value="year_asc">Рік: спочатку старі</option>
-            <option value="title_asc">Назва: А–Я</option>
-            <option value="title_desc">Назва: Я–А</option>
+            <option value="">Будь-яка країна</option>
+            {COUNTRY_OPTIONS.map((code) => (
+              <option value={code} key={code}>
+                {countryName(code)}
+              </option>
+            ))}
           </select>
         </label>
+          </>
+        )}
       </div>
     </section>
   )
