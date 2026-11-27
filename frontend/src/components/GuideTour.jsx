@@ -95,6 +95,7 @@ export function GuideTour() {
   const location = useLocation()
   const [phase, setPhase] = useState('idle') // idle | welcome | steps
   const [index, setIndex] = useState(0)
+  const [confirmClose, setConfirmClose] = useState(false)
   const [rect, setRect] = useState(null)
   const targetRef = useRef(null)
   const tooltipRef = useRef(null)
@@ -104,6 +105,7 @@ export function GuideTour() {
     writeDone()
     setPhase('idle')
     setIndex(0)
+    setConfirmClose(false)
     setRect(null)
     targetRef.current = null
   }, [])
@@ -221,6 +223,14 @@ export function GuideTour() {
     if (phase === 'idle') return undefined
     function onKey(event) {
       if (event.key === 'Escape') close()
+      // Enter на кнопці натискає саму кнопку — не дублюємо
+      const onButton = event.target instanceof Element && event.target.closest('button')
+      if (event.key === 'Enter' && !onButton) {
+        event.preventDefault()
+        if (phase === 'welcome') startSteps()
+        else if (!confirmClose) next()
+        return
+      }
       if (phase !== 'steps') return
       if (event.key === 'ArrowRight') next()
       if (event.key === 'ArrowLeft') prev()
@@ -228,7 +238,7 @@ export function GuideTour() {
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phase, index])
+  }, [phase, index, confirmClose])
 
   function next() {
     if (index >= STEPS.length - 1) close()
@@ -236,7 +246,9 @@ export function GuideTour() {
   }
 
   function prev() {
-    setIndex((value) => Math.max(0, value - 1))
+    // На першому кроці «Назад» виходить з екскурсії
+    if (index === 0) close()
+    else setIndex((value) => value - 1)
   }
 
   if (phase === 'idle') return null
@@ -277,7 +289,13 @@ export function GuideTour() {
   const pad = 8
   return createPortal(
     <>
-      <div className="tour-blocker" onMouseDown={(event) => event.stopPropagation()} />
+      <div
+        className="tour-blocker"
+        onMouseDown={(event) => {
+          event.stopPropagation()
+          setConfirmClose(true)
+        }}
+      />
       {rect && (
         <div
           className="tour-spot"
@@ -298,21 +316,35 @@ export function GuideTour() {
         style={rect ? tooltipStyle : { visibility: 'hidden' }}
       >
         <button type="button" className="tour-skip" onClick={close}>
-          Пропустити
+          Пропустити екскурсію ✕
         </button>
         <span className="tour-count">
           Крок {index + 1} / {STEPS.length}
         </span>
         <h3>{step.title}</h3>
         <p>{step.text}</p>
-        <div className="tour-nav">
-          <button type="button" className="button button-ghost button-small" onClick={prev} disabled={index === 0}>
-            Назад
-          </button>
-          <button type="button" className="button button-primary button-small" onClick={next}>
-            {index === STEPS.length - 1 ? 'Готово' : 'Далі'}
-          </button>
-        </div>
+        {confirmClose ? (
+          <div className="tour-confirm" role="alertdialog" aria-label="Закрити екскурсію?">
+            <p>Закрити екскурсію?</p>
+            <div className="tour-nav">
+              <button type="button" className="button button-ghost button-small" onClick={() => setConfirmClose(false)}>
+                Продовжити
+              </button>
+              <button type="button" className="button button-primary button-small" onClick={close}>
+                Так, закрити
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="tour-nav">
+            <button type="button" className="button button-ghost button-small" onClick={prev}>
+              {index === 0 ? 'Вийти' : 'Назад'}
+            </button>
+            <button type="button" className="button button-primary button-small" onClick={next}>
+              {index === STEPS.length - 1 ? 'Готово' : 'Далі'}
+            </button>
+          </div>
+        )}
       </div>
     </>,
     document.body,

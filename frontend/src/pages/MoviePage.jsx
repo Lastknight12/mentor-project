@@ -248,6 +248,13 @@ export function MoviePage() {
   const [favoriteBusy, setFavoriteBusy] = useState(false)
   const [favoriteError, setFavoriteError] = useState('')
   const [shareNote, setShareNote] = useState('')
+
+  // Повідомлення «Посилання скопійовано» закривається само за 30 с або кнопкою
+  useEffect(() => {
+    if (!shareNote) return undefined
+    const timer = setTimeout(() => setShareNote(''), 30000)
+    return () => clearTimeout(timer)
+  }, [shareNote])
   const [trailerPlaying, setTrailerPlaying] = useState(false)
   const { captions } = useA11y()
   const captionParams = captions ? '&cc_load_policy=1&hl=uk&cc_lang_pref=uk' : ''
@@ -295,7 +302,6 @@ export function MoviePage() {
     } catch {
       setShareNote('Скопіюйте посилання з адресного рядка')
     }
-    setTimeout(() => setShareNote(''), 2500)
   }
 
   async function toggleFavorite() {
@@ -363,6 +369,9 @@ export function MoviePage() {
                 {statusLabel(movie)}
               </span>
               <h1>{movie.title}</h1>
+              {movie.originalTitle && movie.originalTitle !== movie.title && (
+                <p className="original-title">{movie.originalTitle}</p>
+              )}
               {movie.tagline && <p className="tagline">«{movie.tagline}»</p>}
 
               <div className="detail-meta">
@@ -396,7 +405,10 @@ export function MoviePage() {
               </div>
 
               <p className="detail-overview">
-                {movie.overview || 'Опис цього фільму ще не додано.'}
+                {movie.overview ||
+                  (movie.status === 'Released'
+                    ? 'Опис цього фільму українською поки відсутній.'
+                    : 'Фільм ще не вийшов. Опис зʼявиться ближче до прем’єри.')}
               </p>
 
               <div className="detail-actions">
@@ -461,11 +473,6 @@ export function MoviePage() {
                   </Link>
                 )}
               </div>
-              {shareNote && (
-                <p className="share-note" role="status">
-                  {shareNote}
-                </p>
-              )}
               {favoriteError && <p className="form-error">{favoriteError}</p>}
 
               <dl className="detail-facts">
@@ -590,6 +597,15 @@ export function MoviePage() {
 
         <Reviews movie={movie} onSaved={handleReviewSaved} />
       </div>
+
+      {shareNote && (
+        <div className="toast" role="status">
+          <span>{shareNote}</span>
+          <button type="button" onClick={() => setShareNote('')} aria-label="Закрити повідомлення">
+            ✕
+          </button>
+        </div>
+      )}
     </div>
   )
 }

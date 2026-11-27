@@ -11,6 +11,17 @@ import {
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
+// 8+ символів, латиниця, цифра, спеціальний знак; без кирилиці та пробілів
+function isStrongPassword(password) {
+  return (
+    password.length >= 8 &&
+    /[A-Za-z]/.test(password) &&
+    /\d/.test(password) &&
+    /[^A-Za-z0-9]/.test(password) &&
+    /^[\x21-\x7E]+$/.test(password)
+  )
+}
+
 function createToken(user) {
   return jwt.sign({ sub: user.id }, config.jwtSecret, { expiresIn: '7d' })
 }
@@ -35,8 +46,11 @@ authRouter.post('/register', async (req, res) => {
   if (!emailPattern.test(email)) {
     return res.status(400).json({ error: 'Введіть коректну електронну адресу' })
   }
-  if (password.length < 6) {
-    return res.status(400).json({ error: 'Пароль має містити щонайменше 6 символів' })
+  if (!isStrongPassword(password)) {
+    return res.status(400).json({
+      error:
+        'Пароль: щонайменше 8 символів, латинські літери, цифра і спеціальний знак',
+    })
   }
   if (findUserByEmail(email)) {
     return res.status(409).json({ error: 'Користувач із такою поштою вже існує' })

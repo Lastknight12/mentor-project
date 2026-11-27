@@ -122,7 +122,7 @@ export function AccessibilityWidget() {
     {
       key: 'captions',
       label: 'Субтитри',
-      hint: 'Для глухих',
+      hint: settings.captions ? 'Увімкнено' : 'Для глухих',
       icon: <CaptionsIcon />,
       active: settings.captions,
       onClick: toggleCaptions,
@@ -165,6 +165,10 @@ export function AccessibilityWidget() {
               </button>
             ))}
           </div>
+          <p className="a11y-note">
+            Субтитри показуються в трейлерах і фільмах, де вони є.
+            {settings.captions ? ' Зараз увімкнено.' : ''}
+          </p>
           <button type="button" className="a11y-reset" onClick={reset}>
             Скинути налаштування
           </button>

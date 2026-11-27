@@ -9,6 +9,15 @@ import {
   StarIcon,
 } from '../components/Icons.jsx'
 import { PageLoader } from '../components/Loaders.jsx'
+import { PASSWORD_CHECKS, isPasswordValid } from '../passwordRule.js'
+
+function RequiredMark() {
+  return (
+    <span className="req" title="Обов’язкове поле">
+      * <span className="req-text">обов’язкове</span>
+    </span>
+  )
+}
 
 export function AuthPage({ mode }) {
   const { user, loading, login, register } = useAuth()
@@ -35,6 +44,10 @@ export function AuthPage({ mode }) {
   async function handleSubmit(event) {
     event.preventDefault()
     setError('')
+    if (isRegister && !isPasswordValid(form.password)) {
+      setError('Пароль не відповідає правилам нижче')
+      return
+    }
     setSubmitting(true)
     try {
       if (isRegister) {
@@ -115,7 +128,9 @@ export function AuthPage({ mode }) {
           <form className="auth-form" onSubmit={handleSubmit}>
             {isRegister && (
               <label>
-                <span>Імʼя</span>
+                <span>
+                  Імʼя <RequiredMark />
+                </span>
                 <input
                   type="text"
                   name="name"
@@ -129,7 +144,9 @@ export function AuthPage({ mode }) {
               </label>
             )}
             <label>
-              <span>Електронна пошта</span>
+              <span>
+                Електронна пошта <RequiredMark />
+              </span>
               <input
                 type="email"
                 name="email"
@@ -141,16 +158,17 @@ export function AuthPage({ mode }) {
               />
             </label>
             <label>
-              <span>Пароль</span>
+              <span>
+                Пароль <RequiredMark />
+              </span>
               <div className="password-wrap">
                 <input
                   type={showPassword ? 'text' : 'password'}
                   name="password"
                   value={form.password}
                   onChange={updateField}
-                  placeholder="Щонайменше 6 символів"
+                  placeholder={isRegister ? 'Мінімум 8 символів' : 'Ваш пароль'}
                   autoComplete={isRegister ? 'new-password' : 'current-password'}
-                  minLength="6"
                   required
                 />
                 <button
@@ -165,6 +183,23 @@ export function AuthPage({ mode }) {
                 </button>
               </div>
             </label>
+
+            {isRegister && (
+              <ul className="password-rules" aria-label="Правила пароля">
+                {PASSWORD_CHECKS.map((check) => (
+                  <li
+                    key={check.id}
+                    className={check.test(form.password) ? 'is-ok' : ''}
+                  >
+                    {check.test(form.password) ? '✓' : '○'} {check.label}
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            <p className="required-note">
+              <span className="req">*</span> — обов’язкове поле
+            </p>
 
             {error && <p className="form-error">{error}</p>}
 
